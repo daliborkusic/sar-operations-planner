@@ -10,9 +10,16 @@ import TeamView from './TeamView';
 export default function SearcherApp() {
   const { t } = useTranslation();
   const currentUser = useStore((s) => s.currentUser);
-  const mission = useStore((s) => currentUser ? s.getUserMission(currentUser.id) : undefined);
-  const team = useStore((s) => currentUser ? s.getUserTeam(currentUser.id) : undefined);
+  const missionParticipants = useStore((s) => s.missionParticipants);
+  const missions = useStore((s) => s.missions);
+  const teamMembers = useStore((s) => s.teamMembers);
+  const teams = useStore((s) => s.teams);
   const logout = useStore((s) => s.logout);
+
+  const mp = currentUser ? missionParticipants.find((p) => p.userId === currentUser.id) : undefined;
+  const mission = mp ? missions.find((m) => m.id === mp.missionId) : undefined;
+  const tm = currentUser ? teamMembers.find((m) => m.userId === currentUser.id) : undefined;
+  const team = tm ? teams.find((te) => te.id === tm.teamId) : undefined;
   const [showAnonymous, setShowAnonymous] = useState(false);
 
   if (!currentUser) {

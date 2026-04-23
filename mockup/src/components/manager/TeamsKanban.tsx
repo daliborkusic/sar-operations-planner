@@ -21,8 +21,11 @@ const columns: { status: TeamStatus; color: string }[] = [
 
 export default function TeamsKanban({ missionId }: Props) {
   const { t } = useTranslation();
-  const teams = useStore((s) => s.teams.filter((te) => te.missionId === missionId));
-  const isController = useStore((s) => s.isController(missionId));
+  const allTeams = useStore((s) => s.teams);
+  const teams = allTeams.filter((te) => te.missionId === missionId);
+  const currentManagerUserId = useStore((s) => s.currentManagerUser?.id);
+  const controllerId = useStore((s) => s.controllers[missionId]);
+  const isController = !!currentManagerUserId && controllerId === currentManagerUserId;
   const moveTeamToStatus = useStore((s) => s.moveTeamToStatus);
   const getTeamDisplayName = useStore((s) => s.getTeamDisplayName);
   const getTeamMembers = useStore((s) => s.getTeamMembers);

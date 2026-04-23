@@ -5,12 +5,17 @@ import { useStore } from '../../store';
 export default function MissionLobby() {
   const { t } = useTranslation();
   const currentUser = useStore((s) => s.currentUser);
-  const mission = useStore((s) => currentUser ? s.getUserMission(currentUser.id) : undefined);
-  const teams = useStore((s) => mission ? s.teams.filter((te) => te.missionId === mission.id && te.status !== 'dissolved') : []);
+  const missionParticipants = useStore((s) => s.missionParticipants);
+  const missions = useStore((s) => s.missions);
+  const allTeams = useStore((s) => s.teams);
+  const allTeamMembers = useStore((s) => s.teamMembers);
+  const users = useStore((s) => s.users);
   const joinTeam = useStore((s) => s.joinTeam);
   const createTeam = useStore((s) => s.createTeam);
-  const getTeamLeader = useStore((s) => s.getTeamLeader);
-  const getTeamMembers = useStore((s) => s.getTeamMembers);
+
+  const mp = currentUser ? missionParticipants.find((p) => p.userId === currentUser.id) : undefined;
+  const mission = mp ? missions.find((m) => m.id === mp.missionId) : undefined;
+  const teams = mission ? allTeams.filter((te) => te.missionId === mission.id && te.status !== 'dissolved') : [];
   const [showCreate, setShowCreate] = useState(false);
   const [teamName, setTeamName] = useState('');
 
@@ -37,13 +42,14 @@ export default function MissionLobby() {
       <div className="space-y-2 mb-6">
         <p className="text-sm font-medium text-gray-700">{t('team.title')}</p>
         {teams.map((team) => {
-          const leader = getTeamLeader(team.id);
-          const members = getTeamMembers(team.id);
+          const leaderMember = allTeamMembers.find((m) => m.teamId === team.id && m.role === 'leader');
+          const leader = leaderMember ? users.find((u) => u.id === leaderMember.userId) : undefined;
+          const memberCount = allTeamMembers.filter((m) => m.teamId === team.id).length;
           return (
             <div key={team.id} className="border rounded-lg p-3 flex items-center justify-between">
               <div>
                 <p className="font-medium text-sm">{team.name || leader?.name || t('team.noName')}</p>
-                <p className="text-xs text-gray-500">{members.length} {t('team.members').toLowerCase()}</p>
+                <p className="text-xs text-gray-500">{memberCount} {t('team.members').toLowerCase()}</p>
               </div>
               <button
                 onClick={() => joinTeam(team.id)}

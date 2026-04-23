@@ -7,20 +7,28 @@ import StatusBadge from '../StatusBadge';
 export default function TeamView() {
   const { t } = useTranslation();
   const currentUser = useStore((s) => s.currentUser);
-  const team = useStore((s) => currentUser ? s.getUserTeam(currentUser.id) : undefined);
-  const members = useStore((s) => team ? s.getTeamMembers(team.id) : []);
-  const task = useStore((s) => team ? s.getTeamTask(team.id) : undefined);
-  const teamDisplayName = useStore((s) => team ? s.getTeamDisplayName(team.id) : '');
+  const allTeamMembers = useStore((s) => s.teamMembers);
+  const allTeams = useStore((s) => s.teams);
+  const allTasks = useStore((s) => s.tasks);
+  const users = useStore((s) => s.users);
   const toggleTeamResting = useStore((s) => s.toggleTeamResting);
   const markTaskComplete = useStore((s) => s.markTaskComplete);
   const leaveTeam = useStore((s) => s.leaveTeam);
-  const teamMembers = useStore((s) => s.teamMembers);
+
+  const tm = currentUser ? allTeamMembers.find((m) => m.userId === currentUser.id) : undefined;
+  const team = tm ? allTeams.find((te) => te.id === tm.teamId) : undefined;
+  const members = team
+    ? allTeamMembers.filter((m) => m.teamId === team.id).map((m) => ({ ...users.find((u) => u.id === m.userId)!, role: m.role }))
+    : [];
+  const task = team ? allTasks.find((tk) => tk.assignedTeamId === team.id && tk.status === 'inProgress') : undefined;
+  const leader = team ? allTeamMembers.find((m) => m.teamId === team.id && m.role === 'leader') : undefined;
+  const teamDisplayName = team ? (team.name || (leader ? users.find((u) => u.id === leader.userId)?.name : 'Tim') || 'Tim') : '';
   const [showQr, setShowQr] = useState(false);
 
   if (!team || !currentUser) return null;
 
-  const isLeader = teamMembers.find(
-    (tm) => tm.teamId === team.id && tm.userId === currentUser.id && tm.role === 'leader',
+  const isLeader = allTeamMembers.find(
+    (m) => m.teamId === team.id && m.userId === currentUser.id && m.role === 'leader',
   );
 
   const searchTypeLabels: Record<string, string> = {

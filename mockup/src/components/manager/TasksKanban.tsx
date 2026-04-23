@@ -22,8 +22,11 @@ const columns: { status: TaskStatus; color: string }[] = [
 
 export default function TasksKanban({ missionId }: Props) {
   const { t } = useTranslation();
-  const tasks = useStore((s) => s.tasks.filter((tk) => tk.missionId === missionId));
-  const isController = useStore((s) => s.isController(missionId));
+  const allTasks = useStore((s) => s.tasks);
+  const tasks = allTasks.filter((tk) => tk.missionId === missionId);
+  const currentManagerUserId = useStore((s) => s.currentManagerUser?.id);
+  const controllerId = useStore((s) => s.controllers[missionId]);
+  const isController = !!currentManagerUserId && controllerId === currentManagerUserId;
   const moveTaskToStatus = useStore((s) => s.moveTaskToStatus);
   const pendingAssignment = useStore((s) => s.pendingAssignment);
   const setPendingAssignment = useStore((s) => s.setPendingAssignment);

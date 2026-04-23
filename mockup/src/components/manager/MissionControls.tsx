@@ -12,8 +12,12 @@ interface Props {
 export default function MissionControls({ missionId }: Props) {
   const { t } = useTranslation();
   const mission = useStore((s) => s.missions.find((m) => m.id === missionId))!;
-  const isController = useStore((s) => s.isController(missionId));
-  const controllerName = useStore((s) => s.getControllerName(missionId));
+  const currentManagerUserId = useStore((s) => s.currentManagerUser?.id);
+  const controllers = useStore((s) => s.controllers);
+  const users = useStore((s) => s.users);
+  const isController = !!currentManagerUserId && controllers[missionId] === currentManagerUserId;
+  const controllerUserId = controllers[missionId];
+  const controllerName = controllerUserId ? users.find((u) => u.id === controllerUserId)?.name || null : null;
   const takeControl = useStore((s) => s.takeControl);
   const updateMissionStatus = useStore((s) => s.updateMissionStatus);
   const [showQr, setShowQr] = useState(false);

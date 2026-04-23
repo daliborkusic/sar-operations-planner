@@ -8,13 +8,25 @@ interface Props {
 
 export default function ParticipantsPanel({ missionId }: Props) {
   const { t } = useTranslation();
-  const participants = useStore((s) => s.getMissionParticipants(missionId));
-  const unassigned = useStore((s) => s.getUnassignedParticipants(missionId));
+  const missionParticipants = useStore((s) => s.missionParticipants);
+  const users = useStore((s) => s.users);
   const teamMembers = useStore((s) => s.teamMembers);
-  const teams = useStore((s) => s.teams.filter((te) => te.missionId === missionId && te.status !== 'dissolved'));
+  const allTeams = useStore((s) => s.teams);
+  const teams = allTeams.filter((te) => te.missionId === missionId && te.status !== 'dissolved');
   const getTeamDisplayName = useStore((s) => s.getTeamDisplayName);
   const assignParticipantToTeam = useStore((s) => s.assignParticipantToTeam);
-  const isController = useStore((s) => s.isController(missionId));
+  const currentManagerUserId = useStore((s) => s.currentManagerUser?.id);
+  const controllerId = useStore((s) => s.controllers[missionId]);
+  const isController = !!currentManagerUserId && controllerId === currentManagerUserId;
+
+  const participants = missionParticipants
+    .filter((mp) => mp.missionId === missionId)
+    .map((mp) => ({ ...users.find((u) => u.id === mp.userId)!, role: mp.role }));
+
+  const assignedUserIds = teamMembers
+    .filter((tm) => teams.some((te) => te.id === tm.teamId))
+    .map((tm) => tm.userId);
+  const unassigned = participants.filter((p) => !assignedUserIds.includes(p.id));
 
   const getParticipantTeam = (userId: string) => {
     const tm = teamMembers.find((m) => m.userId === userId);
