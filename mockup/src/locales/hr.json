@@ -1,0 +1,107 @@
+{
+  "common": {
+    "back": "Natrag",
+    "cancel": "Odustani",
+    "confirm": "Potvrdi",
+    "save": "Spremi",
+    "close": "Zatvori",
+    "create": "Stvori",
+    "name": "Naziv",
+    "description": "Opis",
+    "phone": "Telefon",
+    "email": "Email"
+  },
+  "views": {
+    "searcher": "Spašavatelj",
+    "manager": "Voditelj",
+    "split": "Podijeljeni prikaz"
+  },
+  "auth": {
+    "signInHgss": "Prijava s HGSS računom",
+    "continueWithout": "Nastavi bez računa",
+    "nameLabel": "Ime i prezime",
+    "emailLabel": "Email adresa",
+    "enter": "Prijavi se"
+  },
+  "mission": {
+    "title": "Misije",
+    "active": "Aktivna",
+    "suspended": "Obustavljena",
+    "closed": "Zatvorena",
+    "create": "Nova misija",
+    "join": "Pridruži se",
+    "suspend": "Obustavi",
+    "resume": "Nastavi",
+    "close": "Zatvori misiju",
+    "qrCode": "QR kod misije",
+    "keepTeams": "Zadrži timove",
+    "dissolveTeams": "Raspusti timove",
+    "ended": "Misija je završena"
+  },
+  "team": {
+    "title": "Timovi",
+    "create": "Novi tim",
+    "join": "Pridruži se timu",
+    "leave": "Napusti tim",
+    "dissolve": "Raspusti tim",
+    "dissolveConfirm": "Jeste li sigurni da želite raspustiti ovaj tim?",
+    "leader": "Voditelj",
+    "member": "Član",
+    "members": "Članovi",
+    "resting": "Odmor",
+    "idle": "Spreman",
+    "inTask": "U zadatku",
+    "dissolved": "Raspušten",
+    "assignTask": "Dodijeli zadatak",
+    "showQr": "Prikaži QR kod",
+    "shareLink": "Podijeli poveznicu",
+    "selectTeam": "Odaberite tim",
+    "noName": "Tim"
+  },
+  "task": {
+    "title": "Zadaci",
+    "create": "Novi zadatak",
+    "draft": "Skica",
+    "unassigned": "Nedodijeljeno",
+    "inProgress": "U tijeku",
+    "completed": "Završeno",
+    "label": "Oznaka",
+    "searchType": "Tip pretrage",
+    "priority": "Prioritet",
+    "notes": "Bilješke",
+    "assignTeam": "Dodijeli tim",
+    "revokeTeam": "Oduzmi tim",
+    "markComplete": "Označi završenim",
+    "high": "Visok",
+    "medium": "Srednji",
+    "low": "Nizak",
+    "hasty": "Brza pretraga",
+    "grid": "Sustavna pretraga",
+    "roadPatrol": "Ophodnja ceste",
+    "baseSupport": "Potpora baze",
+    "selectTask": "Odaberite zadatak",
+    "noTask": "Nema dodijeljenog zadatka"
+  },
+  "control": {
+    "youHaveControl": "Vi imate kontrolu",
+    "controller": "Kontrolor",
+    "takeControl": "Preuzmi kontrolu",
+    "takeControlConfirm": "Jeste li sigurni da želite preuzeti kontrolu?",
+    "noController": "Nitko nema kontrolu"
+  },
+  "participants": {
+    "title": "Sudionici",
+    "unassigned": "Nedodijeljeni",
+    "inTeam": "U timu",
+    "addFromAd": "Dodaj iz imenika",
+    "count": "{{count}} sudionika"
+  },
+  "searcher": {
+    "scanQr": "Skeniraj QR kod",
+    "openLink": "Otvori poveznicu",
+    "waitingForTeam": "Čekanje na dodjelu tima",
+    "scanToJoin": "Skenirajte QR kod ili otvorite poveznicu za pridruživanje misiji ili timu",
+    "createTeam": "Stvori tim",
+    "teamName": "Naziv tima (opcionalno)"
+  }
+}
