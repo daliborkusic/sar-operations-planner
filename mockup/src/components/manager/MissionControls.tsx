@@ -25,6 +25,7 @@ export default function MissionControls({ missionId }: Props) {
   const [showQr, setShowQr] = useState(false);
   const [showTakeControl, setShowTakeControl] = useState(false);
   const [showSuspend, setShowSuspend] = useState(false);
+  const [showClose, setShowClose] = useState(false);
 
   const managers = missionParticipants
     .filter((mp) => mp.missionId === missionId && mp.role === 'manager')
@@ -88,7 +89,7 @@ export default function MissionControls({ missionId }: Props) {
           <button onClick={() => setShowSuspend(true)} className="flex-1 py-2 bg-yellow-500 text-white rounded text-sm font-medium">
             {t('mission.suspend')}
           </button>
-          <button onClick={() => updateMissionStatus(missionId, 'closed')} className="flex-1 py-2 bg-red-600 text-white rounded text-sm font-medium">
+          <button onClick={() => setShowClose(true)} className="flex-1 py-2 bg-red-600 text-white rounded text-sm font-medium">
             {t('mission.close')}
           </button>
         </div>
@@ -106,6 +107,15 @@ export default function MissionControls({ missionId }: Props) {
           message={t('control.takeControlConfirm')}
           onConfirm={() => { takeControl(missionId); setShowTakeControl(false); }}
           onCancel={() => setShowTakeControl(false)}
+        />
+      )}
+
+      {showClose && (
+        <ConfirmDialog
+          title={t('mission.close')}
+          message={t('mission.closeConfirm')}
+          onConfirm={() => { updateMissionStatus(missionId, 'closed'); setShowClose(false); }}
+          onCancel={() => setShowClose(false)}
         />
       )}
 

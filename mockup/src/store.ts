@@ -63,6 +63,7 @@ interface AppState {
   createTeamAsManager: (missionId: string, name?: string, leaderId?: string) => void;
   assignParticipantToTeam: (userId: string, teamId: string) => void;
   removeParticipantFromTeam: (userId: string, teamId: string) => void;
+  renameTeam: (teamId: string, name: string) => void;
   dissolveTeam: (teamId: string) => void;
   moveTeamToStatus: (teamId: string, newStatus: TeamStatus) => void;
   takeControl: (missionId: string) => void;
@@ -323,9 +324,11 @@ export const useStore = create<AppState>((set, get) => ({
       set({ pendingAssignment: { type: 'assignTeamToTask', taskId } });
       return;
     }
+    const shouldReleaseTeam = task.assignedTeamId &&
+      (newStatus === 'completed' || newStatus === 'unassigned' || newStatus === 'draft');
     set((s) => {
       let teams = s.teams;
-      if (newStatus === 'completed' && task.assignedTeamId) {
+      if (shouldReleaseTeam && task.assignedTeamId) {
         teams = teams.map((t) =>
           t.id === task.assignedTeamId ? { ...t, status: 'idle' as const } : t,
         );
@@ -333,7 +336,7 @@ export const useStore = create<AppState>((set, get) => ({
       return {
         tasks: s.tasks.map((t) =>
           t.id === taskId
-            ? { ...t, status: newStatus, assignedTeamId: newStatus === 'completed' ? null : t.assignedTeamId }
+            ? { ...t, status: newStatus, assignedTeamId: shouldReleaseTeam ? null : t.assignedTeamId }
             : t,
         ),
         teams,
@@ -426,6 +429,12 @@ export const useStore = create<AppState>((set, get) => ({
       return;
     }
     set({ teamMembers: remaining });
+  },
+
+  renameTeam: (teamId, name) => {
+    set((s) => ({
+      teams: s.teams.map((t) => (t.id === teamId ? { ...t, name: name || undefined } : t)),
+    }));
   },
 
   dissolveTeam: (teamId) => {

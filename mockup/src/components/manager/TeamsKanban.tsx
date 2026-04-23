@@ -32,8 +32,14 @@ export default function TeamsKanban({ missionId }: Props) {
   const getTeamDisplayName = useStore((s) => s.getTeamDisplayName);
   const getTeamMembers = useStore((s) => s.getTeamMembers);
   const getTeamTask = useStore((s) => s.getTeamTask);
+  const createTeamAsManager = useStore((s) => s.createTeamAsManager);
+  const renameTeam = useStore((s) => s.renameTeam);
   const [assigningTeamId, setAssigningTeamId] = useState<string | null>(null);
   const [dissolvingTeamId, setDissolvingTeamId] = useState<string | null>(null);
+  const [renamingTeamId, setRenamingTeamId] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState('');
+  const [showCreateTeam, setShowCreateTeam] = useState(false);
+  const [newTeamName, setNewTeamName] = useState('');
 
   const handleDragEnd = (event: DragEndEvent) => {
     if (!isController) return;
@@ -75,7 +81,17 @@ export default function TeamsKanban({ missionId }: Props) {
 
   return (
     <div>
-      <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wide mb-3">{t('team.title')}</h3>
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wide">{t('team.title')}</h3>
+        {isController && (
+          <button
+            onClick={() => setShowCreateTeam(true)}
+            className="text-xs px-3 py-1 bg-hgss-blue text-white rounded"
+          >
+            + {t('team.create')}
+          </button>
+        )}
+      </div>
 
       <DndContext onDragEnd={handleDragEnd}>
         <div className="flex gap-3 overflow-x-auto pb-4">
@@ -98,14 +114,25 @@ export default function TeamsKanban({ missionId }: Props) {
                           {'→'} {task.label}
                         </div>
                       )}
-                      {isController && (team.status === 'idle' || team.status === 'resting') && (
-                        <button
-                          onPointerDown={(e) => e.stopPropagation()}
-                          onClick={(e) => { e.stopPropagation(); setAssigningTeamId(team.id); }}
-                          className="text-xs text-hgss-blue hover:underline"
-                        >
-                          {t('team.assignTask')}
-                        </button>
+                      {isController && (
+                        <div className="flex gap-3">
+                          {(team.status === 'idle' || team.status === 'resting') && (
+                            <button
+                              onPointerDown={(e) => e.stopPropagation()}
+                              onClick={(e) => { e.stopPropagation(); setAssigningTeamId(team.id); }}
+                              className="text-xs text-hgss-blue hover:underline"
+                            >
+                              {t('team.assignTask')}
+                            </button>
+                          )}
+                          <button
+                            onPointerDown={(e) => e.stopPropagation()}
+                            onClick={(e) => { e.stopPropagation(); setRenamingTeamId(team.id); setRenameValue(team.name || ''); }}
+                            className="text-xs text-gray-500 hover:underline"
+                          >
+                            {t('team.rename')}
+                          </button>
+                        </div>
                       )}
                     </KanbanCard>
                   );
@@ -127,6 +154,44 @@ export default function TeamsKanban({ missionId }: Props) {
           onConfirm={() => { moveTeamToStatus(dissolvingTeamId, 'dissolved'); setDissolvingTeamId(null); }}
           onCancel={() => setDissolvingTeamId(null)}
         />
+      )}
+
+      {renamingTeamId && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setRenamingTeamId(null)}>
+          <div className="bg-white rounded-lg p-6 max-w-sm w-full mx-4 shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-lg font-semibold mb-4">{t('team.rename')}</h3>
+            <input
+              value={renameValue}
+              onChange={(e) => setRenameValue(e.target.value)}
+              placeholder={t('team.newName')}
+              className="w-full p-2 border rounded mb-4"
+              autoFocus
+            />
+            <div className="flex justify-end gap-3">
+              <button onClick={() => setRenamingTeamId(null)} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded">{t('common.cancel')}</button>
+              <button onClick={() => { renameTeam(renamingTeamId, renameValue.trim()); setRenamingTeamId(null); }} className="px-4 py-2 bg-hgss-blue text-white rounded">{t('common.save')}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showCreateTeam && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowCreateTeam(false)}>
+          <div className="bg-white rounded-lg p-6 max-w-sm w-full mx-4 shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-lg font-semibold mb-4">{t('team.create')}</h3>
+            <input
+              value={newTeamName}
+              onChange={(e) => setNewTeamName(e.target.value)}
+              placeholder={t('team.newName')}
+              className="w-full p-2 border rounded mb-4"
+              autoFocus
+            />
+            <div className="flex justify-end gap-3">
+              <button onClick={() => { setShowCreateTeam(false); setNewTeamName(''); }} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded">{t('common.cancel')}</button>
+              <button onClick={() => { createTeamAsManager(missionId, newTeamName.trim() || undefined); setShowCreateTeam(false); setNewTeamName(''); }} className="px-4 py-2 bg-hgss-blue text-white rounded">{t('common.create')}</button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -74,18 +74,10 @@ export default function TeamView() {
               ? (task ? t('team.inTask') : t('team.idle'))
               : t('team.resting')}
           </button>
-          {task && (
-            <button
-              onClick={() => markTaskComplete(task.id)}
-              className="flex-1 py-2 bg-green-600 text-white rounded text-sm font-medium"
-            >
-              {t('task.markComplete')}
-            </button>
-          )}
         </div>
       )}
 
-      <div className="mb-6">
+      <div className="mb-4">
         <h3 className="text-sm font-semibold text-gray-700 mb-2">{t('team.members')} ({members.length})</h3>
         <div className="space-y-2">
           {members.map((m) => (
@@ -109,6 +101,23 @@ export default function TeamView() {
         </div>
       </div>
 
+      <div className="flex gap-2 mb-6">
+        {isLeader && (
+          <button
+            onClick={() => { if (confirm(t('team.dissolveConfirm'))) { useStore.getState().dissolveTeam(team.id); } }}
+            className="flex-1 py-2 border border-red-300 text-red-600 rounded text-sm"
+          >
+            {t('team.dissolve')}
+          </button>
+        )}
+        <button
+          onClick={leaveTeam}
+          className="flex-1 py-2 border border-gray-300 text-gray-600 rounded text-sm"
+        >
+          {t('team.leave')}
+        </button>
+      </div>
+
       <div className="mb-6">
         <h3 className="text-sm font-semibold text-gray-700 mb-2">{t('task.title')}</h3>
         {task ? (
@@ -119,27 +128,18 @@ export default function TeamView() {
             </div>
             <p className="text-xs text-gray-500 mb-1">{searchTypeLabels[task.searchType]}</p>
             {task.notes && <p className="text-sm text-gray-600 mt-2">{task.notes}</p>}
+            {isLeader && (
+              <button
+                onClick={() => markTaskComplete(task.id)}
+                className="w-full mt-3 py-2 bg-green-600 text-white rounded text-sm font-medium"
+              >
+                {t('task.markComplete')}
+              </button>
+            )}
           </div>
         ) : (
           <p className="text-gray-400 text-center py-4">{t('task.noTask')}</p>
         )}
-      </div>
-
-      <div className="space-y-2">
-        {isLeader && (
-          <button
-            onClick={() => { if (confirm(t('team.dissolveConfirm'))) { useStore.getState().dissolveTeam(team.id); } }}
-            className="w-full py-2 border border-red-300 text-red-600 rounded text-sm"
-          >
-            {t('team.dissolve')}
-          </button>
-        )}
-        <button
-          onClick={leaveTeam}
-          className="w-full py-2 border border-gray-300 text-gray-600 rounded text-sm"
-        >
-          {t('team.leave')}
-        </button>
       </div>
     </div>
   );
