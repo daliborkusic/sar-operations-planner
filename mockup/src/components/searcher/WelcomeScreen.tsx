@@ -8,7 +8,8 @@ interface Props {
 export default function WelcomeScreen({ onAnonymous }: Props) {
   const { t } = useTranslation();
   const loginAsRegistered = useStore((s) => s.loginAsRegistered);
-  const users = useStore((s) => s.users.filter((u) => u.type === 'registered'));
+  const allUsers = useStore((s) => s.users);
+  const users = allUsers.filter((u) => u.type === 'registered');
 
   return (
     <div className="flex flex-col items-center justify-center min-h-full p-6">

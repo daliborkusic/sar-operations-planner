@@ -10,9 +10,8 @@ interface Props {
 
 export default function TaskAssignDialog({ teamId, missionId, onClose }: Props) {
   const { t } = useTranslation();
-  const tasks = useStore((s) =>
-    s.tasks.filter((tk) => tk.missionId === missionId && tk.status === 'unassigned'),
-  );
+  const allTasks = useStore((s) => s.tasks);
+  const tasks = allTasks.filter((tk) => tk.missionId === missionId && tk.status === 'unassigned');
   const assignTeamToTask = useStore((s) => s.assignTeamToTask);
 
   const searchTypeLabels: Record<string, string> = {

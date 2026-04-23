@@ -4,7 +4,8 @@ import StatusBadge from '../StatusBadge';
 
 export default function MissionList() {
   const { t } = useTranslation();
-  const missions = useStore((s) => s.missions.filter((m) => m.status === 'active'));
+  const allMissions = useStore((s) => s.missions);
+  const missions = allMissions.filter((m) => m.status === 'active');
   const joinMission = useStore((s) => s.joinMission);
 
   return (

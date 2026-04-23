@@ -9,9 +9,8 @@ interface Props {
 
 export default function TeamAssignDialog({ taskId, missionId, onClose }: Props) {
   const { t } = useTranslation();
-  const teams = useStore((s) =>
-    s.teams.filter((te) => te.missionId === missionId && (te.status === 'idle' || te.status === 'resting')),
-  );
+  const allTeams = useStore((s) => s.teams);
+  const teams = allTeams.filter((te) => te.missionId === missionId && (te.status === 'idle' || te.status === 'resting'));
   const assignTeamToTask = useStore((s) => s.assignTeamToTask);
   const getTeamDisplayName = useStore((s) => s.getTeamDisplayName);
   const getTeamMembers = useStore((s) => s.getTeamMembers);
