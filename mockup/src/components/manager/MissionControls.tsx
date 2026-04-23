@@ -12,17 +12,24 @@ interface Props {
 export default function MissionControls({ missionId }: Props) {
   const { t } = useTranslation();
   const mission = useStore((s) => s.missions.find((m) => m.id === missionId))!;
-  const currentManagerUserId = useStore((s) => s.currentManagerUser?.id);
+  const currentManagerUser = useStore((s) => s.currentManagerUser);
   const controllers = useStore((s) => s.controllers);
-  const users = useStore((s) => s.users);
-  const isController = !!currentManagerUserId && controllers[missionId] === currentManagerUserId;
+  const allUsers = useStore((s) => s.users);
+  const missionParticipants = useStore((s) => s.missionParticipants);
+  const loginManagerAs = useStore((s) => s.loginManagerAs);
+  const isController = !!currentManagerUser && controllers[missionId] === currentManagerUser.id;
   const controllerUserId = controllers[missionId];
-  const controllerName = controllerUserId ? users.find((u) => u.id === controllerUserId)?.name || null : null;
+  const controllerName = controllerUserId ? allUsers.find((u) => u.id === controllerUserId)?.name || null : null;
   const takeControl = useStore((s) => s.takeControl);
   const updateMissionStatus = useStore((s) => s.updateMissionStatus);
   const [showQr, setShowQr] = useState(false);
   const [showTakeControl, setShowTakeControl] = useState(false);
   const [showSuspend, setShowSuspend] = useState(false);
+
+  const managers = missionParticipants
+    .filter((mp) => mp.missionId === missionId && mp.role === 'manager')
+    .map((mp) => allUsers.find((u) => u.id === mp.userId)!)
+    .filter(Boolean);
 
   return (
     <div className="bg-white rounded-lg border p-4">
@@ -43,9 +50,22 @@ export default function MissionControls({ missionId }: Props) {
         </div>
       )}
 
+      <div className="flex items-center gap-2 mb-4 p-2 bg-gray-50 rounded text-xs">
+        <span className="text-gray-500">{t('control.actingAs')}:</span>
+        <select
+          value={currentManagerUser?.id || ''}
+          onChange={(e) => loginManagerAs(e.target.value)}
+          className="border rounded px-2 py-1 text-xs font-medium"
+        >
+          {managers.map((u) => (
+            <option key={u.id} value={u.id}>{u.name}</option>
+          ))}
+        </select>
+      </div>
+
       <div className={`p-3 rounded-lg mb-4 ${isController ? 'bg-green-50 border border-green-200' : 'bg-gray-50 border border-gray-200'}`}>
         {isController ? (
-          <p className="text-sm font-medium text-green-700">&check; {t('control.youHaveControl')}</p>
+          <p className="text-sm font-medium text-green-700">{'✓'} {t('control.youHaveControl')}</p>
         ) : controllerName ? (
           <div className="flex items-center justify-between">
             <p className="text-sm text-gray-600">{t('control.controller')}: <strong>{controllerName}</strong></p>

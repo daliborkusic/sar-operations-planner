@@ -42,7 +42,7 @@ export default function SearcherApp() {
 
       {missionClosed ? (
         <div className="flex-1 flex flex-col items-center justify-center p-6">
-          <div className="text-4xl mb-4">&check;</div>
+          <div className="text-4xl mb-4">✓</div>
           <p className="text-lg font-semibold">{t('mission.ended')}</p>
         </div>
       ) : team && team.status !== 'dissolved' ? (

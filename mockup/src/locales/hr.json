@@ -24,19 +24,19 @@
     "enter": "Prijavi se"
   },
   "mission": {
-    "title": "Misije",
+    "title": "Akcije",
     "active": "Aktivna",
     "suspended": "Obustavljena",
     "closed": "Zatvorena",
-    "create": "Nova misija",
+    "create": "Nova akcija",
     "join": "Pridruži se",
     "suspend": "Obustavi",
     "resume": "Nastavi",
-    "close": "Zatvori misiju",
-    "qrCode": "QR kod misije",
+    "close": "Zatvori akciju",
+    "qrCode": "QR kod akcije",
     "keepTeams": "Zadrži timove",
     "dissolveTeams": "Raspusti timove",
-    "ended": "Misija je završena"
+    "ended": "Akcija je završena"
   },
   "team": {
     "title": "Timovi",
@@ -61,7 +61,7 @@
   "task": {
     "title": "Zadaci",
     "create": "Novi zadatak",
-    "draft": "Skica",
+    "draft": "U pripremi",
     "unassigned": "Nedodijeljeno",
     "inProgress": "U tijeku",
     "completed": "Završeno",
@@ -87,7 +87,8 @@
     "controller": "Kontrolor",
     "takeControl": "Preuzmi kontrolu",
     "takeControlConfirm": "Jeste li sigurni da želite preuzeti kontrolu?",
-    "noController": "Nitko nema kontrolu"
+    "noController": "Nitko nema kontrolu",
+    "actingAs": "Prijavljeni kao"
   },
   "participants": {
     "title": "Sudionici",
@@ -100,8 +101,12 @@
     "scanQr": "Skeniraj QR kod",
     "openLink": "Otvori poveznicu",
     "waitingForTeam": "Čekanje na dodjelu tima",
-    "scanToJoin": "Skenirajte QR kod ili otvorite poveznicu za pridruživanje misiji ili timu",
+    "scanToJoin": "Skenirajte QR kod ili otvorite poveznicu za pridruživanje akciji ili timu",
     "createTeam": "Stvori tim",
     "teamName": "Naziv tima (opcionalno)"
+  },
+  "dashboard": {
+    "tasks": "Zadaci",
+    "teams": "Timovi"
   }
 }

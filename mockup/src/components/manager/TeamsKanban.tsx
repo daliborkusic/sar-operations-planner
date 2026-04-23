@@ -22,11 +22,13 @@ const columns: { status: TeamStatus; color: string }[] = [
 export default function TeamsKanban({ missionId }: Props) {
   const { t } = useTranslation();
   const allTeams = useStore((s) => s.teams);
+  const allTasks = useStore((s) => s.tasks);
   const teams = allTeams.filter((te) => te.missionId === missionId);
   const currentManagerUserId = useStore((s) => s.currentManagerUser?.id);
   const controllerId = useStore((s) => s.controllers[missionId]);
   const isController = !!currentManagerUserId && controllerId === currentManagerUserId;
   const moveTeamToStatus = useStore((s) => s.moveTeamToStatus);
+  const revokeTaskFromTeam = useStore((s) => s.revokeTaskFromTeam);
   const getTeamDisplayName = useStore((s) => s.getTeamDisplayName);
   const getTeamMembers = useStore((s) => s.getTeamMembers);
   const getTeamTask = useStore((s) => s.getTeamTask);
@@ -47,7 +49,19 @@ export default function TeamsKanban({ missionId }: Props) {
       return;
     }
 
-    if (newStatus === 'inTask') return;
+    const teamTask = allTasks.find((tk) => tk.assignedTeamId === teamId && tk.status === 'inProgress');
+
+    if (newStatus === 'inTask') {
+      if (team.status === 'resting' && teamTask) {
+        moveTeamToStatus(teamId, 'inTask');
+      }
+      return;
+    }
+
+    if (newStatus === 'idle' && team.status === 'inTask' && teamTask) {
+      revokeTaskFromTeam(teamTask.id);
+      return;
+    }
 
     moveTeamToStatus(teamId, newStatus);
   };
@@ -64,7 +78,7 @@ export default function TeamsKanban({ missionId }: Props) {
       <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wide mb-3">{t('team.title')}</h3>
 
       <DndContext onDragEnd={handleDragEnd}>
-        <div className="flex gap-4 overflow-x-auto pb-4">
+        <div className="flex gap-3 overflow-x-auto pb-4">
           {columns.map((col) => {
             const colTeams = teams.filter((te) => te.status === col.status);
             return (
@@ -81,11 +95,12 @@ export default function TeamsKanban({ missionId }: Props) {
                       </p>
                       {task && (
                         <div className="text-xs bg-blue-50 text-blue-700 p-1.5 rounded mb-2">
-                          &rarr; {task.label}
+                          {'→'} {task.label}
                         </div>
                       )}
                       {isController && (team.status === 'idle' || team.status === 'resting') && (
                         <button
+                          onPointerDown={(e) => e.stopPropagation()}
                           onClick={(e) => { e.stopPropagation(); setAssigningTeamId(team.id); }}
                           className="text-xs text-hgss-blue hover:underline"
                         >

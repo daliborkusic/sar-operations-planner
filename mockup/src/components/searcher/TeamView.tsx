@@ -94,7 +94,7 @@ export default function TeamView() {
                 <p className="font-medium text-sm">
                   {m.name}
                   {m.role === 'leader' && (
-                    <span className="ml-2 text-xs text-hgss-gold font-semibold">&starf; {t('team.leader')}</span>
+                    <span className="ml-2 text-xs text-hgss-gold font-semibold">★ {t('team.leader')}</span>
                   )}
                 </p>
                 {m.station && <p className="text-xs text-gray-500">{m.station}</p>}
@@ -125,14 +125,22 @@ export default function TeamView() {
         )}
       </div>
 
-      {!isLeader && (
+      <div className="space-y-2">
+        {isLeader && (
+          <button
+            onClick={() => { if (confirm(t('team.dissolveConfirm'))) { useStore.getState().dissolveTeam(team.id); } }}
+            className="w-full py-2 border border-red-300 text-red-600 rounded text-sm"
+          >
+            {t('team.dissolve')}
+          </button>
+        )}
         <button
           onClick={leaveTeam}
-          className="w-full py-2 border border-red-300 text-red-600 rounded text-sm"
+          className="w-full py-2 border border-gray-300 text-gray-600 rounded text-sm"
         >
           {t('team.leave')}
         </button>
-      )}
+      </div>
     </div>
   );
 }
