@@ -4,7 +4,11 @@ import { QRCodeSVG } from 'qrcode.react';
 import { useStore } from '../../store';
 import StatusBadge from '../StatusBadge';
 
-export default function TeamView() {
+interface Props {
+  missionId: string;
+}
+
+export default function TeamView({ missionId }: Props) {
   const { t } = useTranslation();
   const currentUser = useStore((s) => s.currentUser);
   const allTeamMembers = useStore((s) => s.teamMembers);
@@ -15,7 +19,10 @@ export default function TeamView() {
   const markTaskComplete = useStore((s) => s.markTaskComplete);
   const leaveTeam = useStore((s) => s.leaveTeam);
 
-  const tm = currentUser ? allTeamMembers.find((m) => m.userId === currentUser.id) : undefined;
+  const tm = currentUser ? allTeamMembers.find((m) => {
+    const team = allTeams.find((te) => te.id === m.teamId);
+    return m.userId === currentUser.id && team && team.missionId === missionId;
+  }) : undefined;
   const team = tm ? allTeams.find((te) => te.id === tm.teamId) : undefined;
   const members = team
     ? allTeamMembers.filter((m) => m.teamId === team.id).map((m) => ({ ...users.find((u) => u.id === m.userId)!, role: m.role }))

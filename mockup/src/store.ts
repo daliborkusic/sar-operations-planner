@@ -35,10 +35,12 @@ interface AppState {
   currentManagerUser: User | null;
   viewMode: ViewMode;
   selectedMissionId: string | null;
+  selectedSearcherMissionId: string | null;
   pendingAssignment: PendingAssignment | null;
 
   setViewMode: (mode: ViewMode) => void;
   setSelectedMission: (missionId: string | null) => void;
+  setSelectedSearcherMission: (missionId: string | null) => void;
   setPendingAssignment: (pa: PendingAssignment | null) => void;
 
   loginAsRegistered: (userId: string) => void;
@@ -47,6 +49,8 @@ interface AppState {
   logout: () => void;
 
   joinMission: (missionId: string) => void;
+  leaveMission: (missionId: string) => void;
+  removeParticipantFromMission: (missionId: string, userId: string) => void;
   joinTeam: (teamId: string) => void;
   leaveTeam: () => void;
   createTeam: (missionId: string, name?: string) => void;
@@ -94,10 +98,12 @@ export const useStore = create<AppState>((set, get) => ({
   currentManagerUser: mockUsers[0],
   viewMode: 'split',
   selectedMissionId: 'm1',
+  selectedSearcherMissionId: null,
   pendingAssignment: null,
 
   setViewMode: (mode) => set({ viewMode: mode }),
   setSelectedMission: (missionId) => set({ selectedMissionId: missionId }),
+  setSelectedSearcherMission: (missionId) => set({ selectedSearcherMissionId: missionId }),
   setPendingAssignment: (pa) => set({ pendingAssignment: pa }),
 
   loginAsRegistered: (userId) => {
@@ -124,12 +130,75 @@ export const useStore = create<AppState>((set, get) => ({
       (mp) => mp.userId === currentUser.id && mp.missionId === missionId,
     );
     if (already) return;
-    const filtered = missionParticipants.filter((mp) => mp.userId !== currentUser.id);
     set({
       missionParticipants: [
-        ...filtered,
+        ...missionParticipants,
         { userId: currentUser.id, missionId, role: 'searcher', joinedAt: new Date().toISOString() },
       ],
+      selectedSearcherMissionId: missionId,
+    });
+  },
+
+  leaveMission: (missionId) => {
+    const { currentUser } = get();
+    if (!currentUser) return;
+    const userTeamsInMission = get().teamMembers.filter((tm) => {
+      const team = get().teams.find((t) => t.id === tm.teamId);
+      return tm.userId === currentUser.id && team && team.missionId === missionId;
+    });
+    let teamMembers = get().teamMembers;
+    let teams = get().teams;
+    for (const membership of userTeamsInMission) {
+      teamMembers = teamMembers.filter(
+        (tm) => !(tm.userId === currentUser.id && tm.teamId === membership.teamId),
+      );
+      const remaining = teamMembers.filter((tm) => tm.teamId === membership.teamId);
+      if (remaining.length === 0) {
+        teams = teams.map((t) => t.id === membership.teamId ? { ...t, status: 'dissolved' as const } : t);
+      } else if (membership.role === 'leader') {
+        const next = remaining.sort((a, b) => a.joinedAt.localeCompare(b.joinedAt))[0];
+        teamMembers = teamMembers.map((tm) =>
+          tm.teamId === next.teamId && tm.userId === next.userId ? { ...tm, role: 'leader' } : tm,
+        );
+      }
+    }
+    set({
+      missionParticipants: get().missionParticipants.filter(
+        (mp) => !(mp.userId === currentUser.id && mp.missionId === missionId),
+      ),
+      teamMembers,
+      teams,
+      selectedSearcherMissionId: get().selectedSearcherMissionId === missionId ? null : get().selectedSearcherMissionId,
+    });
+  },
+
+  removeParticipantFromMission: (missionId, userId) => {
+    const userTeamsInMission = get().teamMembers.filter((tm) => {
+      const team = get().teams.find((t) => t.id === tm.teamId);
+      return tm.userId === userId && team && team.missionId === missionId;
+    });
+    let teamMembers = get().teamMembers;
+    let teams = get().teams;
+    for (const membership of userTeamsInMission) {
+      teamMembers = teamMembers.filter(
+        (tm) => !(tm.userId === userId && tm.teamId === membership.teamId),
+      );
+      const remaining = teamMembers.filter((tm) => tm.teamId === membership.teamId);
+      if (remaining.length === 0) {
+        teams = teams.map((t) => t.id === membership.teamId ? { ...t, status: 'dissolved' as const } : t);
+      } else if (membership.role === 'leader') {
+        const next = remaining.sort((a, b) => a.joinedAt.localeCompare(b.joinedAt))[0];
+        teamMembers = teamMembers.map((tm) =>
+          tm.teamId === next.teamId && tm.userId === next.userId ? { ...tm, role: 'leader' } : tm,
+        );
+      }
+    }
+    set({
+      missionParticipants: get().missionParticipants.filter(
+        (mp) => !(mp.userId === userId && mp.missionId === missionId),
+      ),
+      teamMembers,
+      teams,
     });
   },
 
@@ -475,13 +544,12 @@ export const useStore = create<AppState>((set, get) => ({
       (mp) => mp.userId === userId && mp.missionId === missionId,
     );
     if (already) return;
-    const filtered = get().missionParticipants.filter((mp) => mp.userId !== userId);
-    set({
+    set((s) => ({
       missionParticipants: [
-        ...filtered,
+        ...s.missionParticipants,
         { userId, missionId, role, joinedAt: new Date().toISOString() },
       ],
-    });
+    }));
   },
 
   getUserMission: (userId) => {

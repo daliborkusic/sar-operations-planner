@@ -2,27 +2,28 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useStore } from '../../store';
 
-export default function MissionLobby() {
+interface Props {
+  missionId: string;
+}
+
+export default function MissionLobby({ missionId }: Props) {
   const { t } = useTranslation();
-  const currentUser = useStore((s) => s.currentUser);
-  const missionParticipants = useStore((s) => s.missionParticipants);
   const missions = useStore((s) => s.missions);
   const allTeams = useStore((s) => s.teams);
   const allTeamMembers = useStore((s) => s.teamMembers);
   const users = useStore((s) => s.users);
   const joinTeam = useStore((s) => s.joinTeam);
   const createTeam = useStore((s) => s.createTeam);
-
-  const mp = currentUser ? missionParticipants.find((p) => p.userId === currentUser.id) : undefined;
-  const mission = mp ? missions.find((m) => m.id === mp.missionId) : undefined;
-  const teams = mission ? allTeams.filter((te) => te.missionId === mission.id && te.status !== 'dissolved') : [];
   const [showCreate, setShowCreate] = useState(false);
   const [teamName, setTeamName] = useState('');
 
+  const mission = missions.find((m) => m.id === missionId);
   if (!mission) return null;
 
+  const teams = allTeams.filter((te) => te.missionId === missionId && te.status !== 'dissolved');
+
   const handleCreate = () => {
-    createTeam(mission.id, teamName.trim() || undefined);
+    createTeam(missionId, teamName.trim() || undefined);
     setShowCreate(false);
     setTeamName('');
   };
@@ -35,7 +36,7 @@ export default function MissionLobby() {
       </div>
 
       <div className="text-center py-6">
-        <div className="text-4xl mb-2">&#9203;</div>
+        <div className="text-4xl mb-2">⏳</div>
         <p className="text-gray-500">{t('searcher.waitingForTeam')}</p>
       </div>
 

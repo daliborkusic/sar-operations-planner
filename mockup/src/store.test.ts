@@ -140,15 +140,25 @@ describe('store', () => {
     });
   });
 
-  describe('one mission at a time', () => {
-    it('joining a new mission removes from previous', () => {
+  describe('multiple missions', () => {
+    it('joining a new mission keeps previous membership', () => {
       useStore.getState().loginAsRegistered('u2');
       useStore.getState().joinMission('m2');
       const state = useStore.getState();
       const m1 = state.missionParticipants.filter((mp) => mp.userId === 'u2' && mp.missionId === 'm1');
       const m2 = state.missionParticipants.filter((mp) => mp.userId === 'u2' && mp.missionId === 'm2');
-      expect(m1).toHaveLength(0);
+      expect(m1).toHaveLength(1);
       expect(m2).toHaveLength(1);
+    });
+
+    it('leaving a mission removes participant and team membership', () => {
+      useStore.getState().loginAsRegistered('u2');
+      useStore.getState().leaveMission('m1');
+      const state = useStore.getState();
+      const mp = state.missionParticipants.filter((p) => p.userId === 'u2' && p.missionId === 'm1');
+      expect(mp).toHaveLength(0);
+      const tm = state.teamMembers.filter((m) => m.userId === 'u2');
+      expect(tm).toHaveLength(0);
     });
   });
 

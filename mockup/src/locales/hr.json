@@ -37,7 +37,11 @@
     "qrCode": "QR kod akcije",
     "keepTeams": "Zadrži timove",
     "dissolveTeams": "Raspusti timove",
-    "ended": "Akcija je završena"
+    "ended": "Akcija je završena",
+    "leave": "Napusti akciju",
+    "leaveConfirm": "Jeste li sigurni da želite napustiti ovu akciju?",
+    "myMissions": "Moje akcije",
+    "backToList": "Natrag na popis"
   },
   "team": {
     "title": "Timovi",
@@ -98,6 +102,9 @@
     "unassigned": "Nedodijeljeni",
     "inTeam": "U timu",
     "addFromAd": "Dodaj iz imenika",
+    "addToMission": "Dodaj u akciju",
+    "removeFromMission": "Ukloni iz akcije",
+    "removeConfirm": "Jeste li sigurni da želite ukloniti ovog sudionika iz akcije?",
     "count": "{{count}} sudionika"
   },
   "searcher": {
