@@ -5,8 +5,13 @@ import StatusBadge from '../StatusBadge';
 export default function MissionList() {
   const { t } = useTranslation();
   const allMissions = useStore((s) => s.missions);
-  const missions = allMissions.filter((m) => m.status === 'active');
+  const currentUser = useStore((s) => s.currentUser);
+  const missionParticipants = useStore((s) => s.missionParticipants);
   const joinMission = useStore((s) => s.joinMission);
+  const userMissionIds = currentUser
+    ? missionParticipants.filter((mp) => mp.userId === currentUser.id).map((mp) => mp.missionId)
+    : [];
+  const missions = allMissions.filter((m) => m.status === 'active' && !userMissionIds.includes(m.id));
 
   return (
     <div className="p-4">
