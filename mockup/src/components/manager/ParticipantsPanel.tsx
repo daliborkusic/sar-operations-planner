@@ -47,7 +47,7 @@ export default function ParticipantsPanel({ missionId }: Props) {
         <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wide">
           {t('participants.title')} ({participants.length})
         </h3>
-        {isController && availableToAdd.length > 0 && (
+        {isController && (
           <button
             onClick={() => setShowAddDialog(true)}
             className="text-xs px-2 py-1 bg-hgss-blue text-white rounded"
