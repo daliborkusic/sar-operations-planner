@@ -15,7 +15,7 @@ export default function KanbanColumn({ id, title, count, color, children, collap
 
   if (collapsed) {
     return (
-      <div className="w-48 flex-shrink-0 bg-gray-50 rounded-lg p-2 border border-gray-200">
+      <div className="min-w-48 flex-1 bg-gray-50 rounded-lg p-2 border border-gray-200">
         <div className={`flex items-center gap-2 mb-3 pb-2 border-b-2 ${color}`}>
           <h3 className="text-sm font-semibold text-gray-700">{title}</h3>
           <span className="text-xs bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded-full">{count}</span>
@@ -28,7 +28,7 @@ export default function KanbanColumn({ id, title, count, color, children, collap
   }
 
   return (
-    <div className="w-64 flex-shrink-0 bg-gray-50 rounded-lg p-2 border border-gray-200">
+    <div className="min-w-48 flex-1 bg-gray-50 rounded-lg p-3 border border-gray-200">
       <div className={`flex items-center gap-2 mb-3 pb-2 border-b-2 ${color}`}>
         <h3 className="text-sm font-semibold text-gray-700">{title}</h3>
         <span className="text-xs bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded-full">{count}</span>

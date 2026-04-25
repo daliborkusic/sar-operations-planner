@@ -17,7 +17,7 @@ export default function MissionDashboard() {
   if (!mission || !selectedMissionId) return null;
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col p-4">
       <div className="flex items-center justify-between mb-4">
         <button onClick={() => setSelectedMission(null)} className="text-hgss-blue hover:underline text-sm">
           {'←'} {t('common.back')}

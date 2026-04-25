@@ -12,6 +12,7 @@ pub fn run() {
                     name TEXT NOT NULL,
                     description TEXT NOT NULL DEFAULT '',
                     status TEXT NOT NULL DEFAULT 'active',
+                    station TEXT NOT NULL DEFAULT '',
                     join_code TEXT NOT NULL,
                     created_at TEXT NOT NULL,
                     created_by TEXT NOT NULL

@@ -94,7 +94,7 @@ export default function TeamsKanban({ missionId }: Props) {
       </div>
 
       <DndContext onDragEnd={handleDragEnd}>
-        <div className="flex gap-3 overflow-x-auto pb-4">
+        <div className="flex gap-3 pb-4">
           {columns.map((col) => {
             const colTeams = teams.filter((te) => te.status === col.status);
             return (

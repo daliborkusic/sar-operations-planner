@@ -21,8 +21,8 @@ export async function seedIfEmpty() {
 
   for (const m of mockMissions) {
     await d.execute(
-      'INSERT INTO missions (id, name, description, status, join_code, created_at, created_by) VALUES ($1,$2,$3,$4,$5,$6,$7)',
-      [m.id, m.name, m.description, m.status, m.joinCode, m.createdAt, m.createdBy],
+      'INSERT INTO missions (id, name, description, status, station, join_code, created_at, created_by) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)',
+      [m.id, m.name, m.description, m.status, m.station, m.joinCode, m.createdAt, m.createdBy],
     );
   }
   for (const u of mockUsers) {
@@ -63,7 +63,7 @@ export async function seedIfEmpty() {
   }
 }
 
-interface DbMission { id: string; name: string; description: string; status: string; join_code: string; created_at: string; created_by: string; }
+interface DbMission { id: string; name: string; description: string; status: string; station: string; join_code: string; created_at: string; created_by: string; }
 interface DbUser { id: string; type: string; name: string; email: string; phone: string | null; station: string | null; rank: string | null; qualifications: string | null; }
 interface DbMissionParticipant { user_id: string; mission_id: string; role: string; joined_at: string; }
 interface DbTeam { id: string; mission_id: string; name: string | null; status: string; join_code: string; created_by: string; }
@@ -75,7 +75,7 @@ export async function loadAll() {
   const d = await getDb();
   const missions = (await d.select<DbMission[]>('SELECT * FROM missions')).map((r) => ({
     id: r.id, name: r.name, description: r.description, status: r.status as Mission['status'],
-    joinCode: r.join_code, createdAt: r.created_at, createdBy: r.created_by,
+    station: r.station, joinCode: r.join_code, createdAt: r.created_at, createdBy: r.created_by,
   }));
   const users = (await d.select<DbUser[]>('SELECT * FROM users')).map((r) => ({
     id: r.id, type: r.type as User['type'], name: r.name, email: r.email,
@@ -111,8 +111,8 @@ export async function saveMissions(missions: Mission[]) {
   await d.execute('DELETE FROM missions');
   for (const m of missions) {
     await d.execute(
-      'INSERT INTO missions (id, name, description, status, join_code, created_at, created_by) VALUES ($1,$2,$3,$4,$5,$6,$7)',
-      [m.id, m.name, m.description, m.status, m.joinCode, m.createdAt, m.createdBy],
+      'INSERT INTO missions (id, name, description, status, station, join_code, created_at, created_by) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)',
+      [m.id, m.name, m.description, m.status, m.station, m.joinCode, m.createdAt, m.createdBy],
     );
   }
 }

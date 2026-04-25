@@ -34,6 +34,8 @@
     "resume": "Nastavi",
     "close": "Zatvori akciju",
     "closeConfirm": "Jeste li sigurni da želite zatvoriti ovu akciju?",
+    "delete": "Obriši akciju",
+    "deleteConfirm": "Jeste li sigurni da želite trajno obrisati ovu akciju? Svi timovi, zadaci i sudionici će biti uklonjeni.",
     "qrCode": "QR kod akcije",
     "keepTeams": "Zadrži timove",
     "dissolveTeams": "Raspusti timove",

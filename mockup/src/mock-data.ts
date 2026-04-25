@@ -14,8 +14,8 @@ export const mockUsers: User[] = [
 ];
 
 export const mockMissions: Mission[] = [
-  { id: 'm1', name: 'Potraga Medvednica - 23.04.2026.', description: 'Nestala osoba na području Medvednice, zadnji signal mobitelom u blizini Puntijarke.', status: 'active', joinCode: 'MED-2026-001', createdAt: '2026-04-23T06:00:00Z', createdBy: 'u1' },
-  { id: 'm2', name: 'Potraga Biokovo - 20.04.2026.', description: 'Nestali planinar na Biokovu, potraga obustavljena noćas.', status: 'suspended', joinCode: 'BIO-2026-002', createdAt: '2026-04-20T08:00:00Z', createdBy: 'u6' },
+  { id: 'm1', name: 'Potraga Medvednica - 23.04.2026.', description: 'Nestala osoba na području Medvednice, zadnji signal mobitelom u blizini Puntijarke.', status: 'active', station: 'Stanica Zagreb', joinCode: 'MED-2026-001', createdAt: '2026-04-23T06:00:00Z', createdBy: 'u1' },
+  { id: 'm2', name: 'Potraga Biokovo - 20.04.2026.', description: 'Nestali planinar na Biokovu, potraga obustavljena noćas.', status: 'suspended', station: 'Stanica Zagreb', joinCode: 'BIO-2026-002', createdAt: '2026-04-20T08:00:00Z', createdBy: 'u6' },
 ];
 
 export const mockMissionParticipants: MissionParticipant[] = [

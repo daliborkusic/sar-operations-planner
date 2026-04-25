@@ -36,6 +36,7 @@ interface AppState {
   hydrate: () => Promise<void>;
 
   createMission: (name: string, description: string) => void;
+  deleteMission: (missionId: string) => void;
   updateMissionStatus: (missionId: string, status: MissionStatus, keepTeams?: boolean) => void;
   createTask: (missionId: string, label: string, searchType: SearchType, priority: TaskPriority, notes: string) => void;
   updateTask: (taskId: string, updates: Partial<Pick<Task, 'label' | 'searchType' | 'priority' | 'notes'>>) => void;
@@ -118,7 +119,7 @@ export const useStore = create<AppState>((set, get) => ({
     if (!currentManagerUser) return;
     const missionId = genId('m');
     const mission: Mission = {
-      id: missionId, name, description, status: 'active',
+      id: missionId, name, description, status: 'active', station: currentManagerUser.station || '',
       joinCode: `MSN-${missionId}`, createdAt: new Date().toISOString(), createdBy: currentManagerUser.id,
     };
     set((s) => ({
@@ -129,6 +130,22 @@ export const useStore = create<AppState>((set, get) => ({
       ],
     }));
     persist(['missions', 'missionParticipants']);
+  },
+
+  deleteMission: (missionId) => {
+    set((s) => ({
+      missions: s.missions.filter((m) => m.id !== missionId),
+      missionParticipants: s.missionParticipants.filter((mp) => mp.missionId !== missionId),
+      teams: s.teams.filter((t) => t.missionId !== missionId),
+      teamMembers: s.teamMembers.filter((tm) => {
+        const team = s.teams.find((t) => t.id === tm.teamId);
+        return !team || team.missionId !== missionId;
+      }),
+      tasks: s.tasks.filter((t) => t.missionId !== missionId),
+      controllers: Object.fromEntries(Object.entries(s.controllers).filter(([k]) => k !== missionId)),
+      selectedMissionId: s.selectedMissionId === missionId ? null : s.selectedMissionId,
+    }));
+    persist(['missions', 'missionParticipants', 'teams', 'teamMembers', 'tasks', 'controllers']);
   },
 
   updateMissionStatus: (missionId, status, keepTeams = true) => {

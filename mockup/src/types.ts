@@ -12,6 +12,7 @@ export interface Mission {
   name: string;
   description: string;
   status: MissionStatus;
+  station: string;
   joinCode: string;
   createdAt: string;
   createdBy: string;

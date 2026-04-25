@@ -10,8 +10,27 @@ export default function MissionListManager() {
   const setSelectedMission = useStore((s) => s.setSelectedMission);
   const [showCreate, setShowCreate] = useState(false);
   const [filter, setFilter] = useState<string>('all');
+  const [collapsedStations, setCollapsedStations] = useState<Set<string>>(new Set());
 
   const filtered = filter === 'all' ? missions : missions.filter((m) => m.status === filter);
+
+  const grouped = filtered.reduce<Record<string, typeof filtered>>((acc, m) => {
+    const station = m.station || 'Ostalo';
+    if (!acc[station]) acc[station] = [];
+    acc[station].push(m);
+    return acc;
+  }, {});
+
+  const stations = Object.keys(grouped).sort();
+
+  const toggleStation = (station: string) => {
+    setCollapsedStations((prev) => {
+      const next = new Set(prev);
+      if (next.has(station)) next.delete(station);
+      else next.add(station);
+      return next;
+    });
+  };
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -34,14 +53,30 @@ export default function MissionListManager() {
         ))}
       </div>
 
-      <div className="space-y-3">
-        {filtered.map((m) => (
-          <div key={m.id} onClick={() => setSelectedMission(m.id)} className="bg-white rounded-lg p-4 border hover:border-hgss-blue cursor-pointer transition-colors">
-            <div className="flex items-center justify-between">
-              <h3 className="font-semibold">{m.name}</h3>
-              <StatusBadge status={m.status} />
-            </div>
-            <p className="text-sm text-gray-500 mt-1">{m.description}</p>
+      <div className="space-y-4">
+        {stations.map((station) => (
+          <div key={station}>
+            <button
+              onClick={() => toggleStation(station)}
+              className="flex items-center gap-2 w-full text-left mb-2 py-1"
+            >
+              <span className="text-xs text-gray-400">{collapsedStations.has(station) ? '▶' : '▼'}</span>
+              <span className="text-sm font-semibold text-gray-600 uppercase tracking-wide">{station}</span>
+              <span className="text-xs text-gray-400">({grouped[station].length})</span>
+            </button>
+            {!collapsedStations.has(station) && (
+              <div className="space-y-2 ml-5">
+                {grouped[station].map((m) => (
+                  <div key={m.id} onClick={() => setSelectedMission(m.id)} className="bg-white rounded-lg p-4 border hover:border-hgss-blue cursor-pointer transition-colors">
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-semibold">{m.name}</h3>
+                      <StatusBadge status={m.status} />
+                    </div>
+                    <p className="text-sm text-gray-500 mt-1">{m.description}</p>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         ))}
       </div>

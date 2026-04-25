@@ -68,7 +68,7 @@ export default function TasksKanban({ missionId }: Props) {
       </div>
 
       <DndContext onDragEnd={handleDragEnd}>
-        <div className="flex gap-4 overflow-x-auto pb-4">
+        <div className="flex gap-3 pb-4">
           {columns.map((col) => {
             const colTasks = tasks.filter((tk) => tk.status === col.status);
             return (

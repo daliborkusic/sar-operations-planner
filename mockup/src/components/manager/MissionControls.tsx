@@ -22,10 +22,12 @@ export default function MissionControls({ missionId }: Props) {
   const controllerName = controllerUserId ? allUsers.find((u) => u.id === controllerUserId)?.name || null : null;
   const takeControl = useStore((s) => s.takeControl);
   const updateMissionStatus = useStore((s) => s.updateMissionStatus);
+  const deleteMission = useStore((s) => s.deleteMission);
   const [showQr, setShowQr] = useState(false);
   const [showTakeControl, setShowTakeControl] = useState(false);
   const [showSuspend, setShowSuspend] = useState(false);
   const [showClose, setShowClose] = useState(false);
+  const [showDelete, setShowDelete] = useState(false);
 
   const managers = missionParticipants
     .filter((mp) => mp.missionId === missionId && mp.role === 'manager')
@@ -96,8 +98,19 @@ export default function MissionControls({ missionId }: Props) {
       )}
 
       {isController && mission.status === 'suspended' && (
-        <button onClick={() => updateMissionStatus(missionId, 'active')} className="w-full py-2 bg-green-600 text-white rounded text-sm font-medium">
-          {t('mission.resume')}
+        <div className="flex gap-2">
+          <button onClick={() => updateMissionStatus(missionId, 'active')} className="flex-1 py-2 bg-green-600 text-white rounded text-sm font-medium">
+            {t('mission.resume')}
+          </button>
+          <button onClick={() => setShowDelete(true)} className="flex-1 py-2 bg-gray-600 text-white rounded text-sm font-medium">
+            {t('mission.delete')}
+          </button>
+        </div>
+      )}
+
+      {isController && mission.status === 'closed' && (
+        <button onClick={() => setShowDelete(true)} className="w-full py-2 bg-gray-600 text-white rounded text-sm font-medium">
+          {t('mission.delete')}
         </button>
       )}
 
@@ -144,6 +157,15 @@ export default function MissionControls({ missionId }: Props) {
             </button>
           </div>
         </div>
+      )}
+
+      {showDelete && (
+        <ConfirmDialog
+          title={t('mission.delete')}
+          message={t('mission.deleteConfirm')}
+          onConfirm={() => { deleteMission(missionId); setShowDelete(false); }}
+          onCancel={() => setShowDelete(false)}
+        />
       )}
     </div>
   );
