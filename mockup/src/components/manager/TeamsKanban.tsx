@@ -48,7 +48,7 @@ export default function TeamsKanban({ missionId }: Props) {
     const teamId = active.id as string;
     const newStatus = over.id as TeamStatus;
     const team = teams.find((te) => te.id === teamId);
-    if (!team || team.status === newStatus) return;
+    if (!team || team.status === newStatus || team.status === 'dissolved') return;
 
     if (newStatus === 'dissolved') {
       setDissolvingTeamId(teamId);
@@ -58,8 +58,10 @@ export default function TeamsKanban({ missionId }: Props) {
     const teamTask = allTasks.find((tk) => tk.assignedTeamId === teamId && tk.status === 'inProgress');
 
     if (newStatus === 'inTask') {
-      if (team.status === 'resting' && teamTask) {
+      if (teamTask) {
         moveTeamToStatus(teamId, 'inTask');
+      } else {
+        setAssigningTeamId(teamId);
       }
       return;
     }
@@ -98,7 +100,7 @@ export default function TeamsKanban({ missionId }: Props) {
           {columns.map((col) => {
             const colTeams = teams.filter((te) => te.status === col.status);
             return (
-              <KanbanColumn key={col.status} id={col.status} title={statusLabels[col.status]} count={colTeams.length} color={col.color} collapsed={col.status === 'dissolved'}>
+              <KanbanColumn key={col.status} id={col.status} title={statusLabels[col.status]} count={colTeams.length} color={col.color}>
                 {colTeams.map((team) => {
                   const members = getTeamMembers(team.id);
                   const task = getTeamTask(team.id);

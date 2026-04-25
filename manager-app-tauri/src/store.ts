@@ -262,7 +262,7 @@ export const useStore = create<AppState>((set, get) => ({
   removeParticipantFromMission: (missionId, userId) => {
     const userTeamsInMission = get().teamMembers.filter((tm) => {
       const team = get().teams.find((t) => t.id === tm.teamId);
-      return tm.userId === userId && team && team.missionId === missionId;
+      return tm.userId === userId && team && team.missionId === missionId && team.status !== 'dissolved';
     });
     let teamMembers = get().teamMembers;
     let teams = get().teams;
@@ -299,6 +299,8 @@ export const useStore = create<AppState>((set, get) => ({
   },
 
   moveTeamToStatus: (teamId, newStatus) => {
+    const team = get().teams.find((t) => t.id === teamId);
+    if (team?.status === 'dissolved') return;
     if (newStatus === 'dissolved') { get().dissolveTeam(teamId); return; }
     set((s) => ({ teams: s.teams.map((t) => (t.id === teamId ? { ...t, status: newStatus } : t)) }));
     persist(['teams']);

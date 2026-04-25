@@ -8,6 +8,8 @@ import KanbanCard from './KanbanCard';
 import StatusBadge from '../StatusBadge';
 import TeamAssignDialog from './TeamAssignDialog';
 import CreateTaskDialog from './CreateTaskDialog';
+import EditTaskDialog from './EditTaskDialog';
+import type { Task } from '../../types';
 
 interface Props {
   missionId: string;
@@ -32,6 +34,7 @@ export default function TasksKanban({ missionId }: Props) {
   const setPendingAssignment = useStore((s) => s.setPendingAssignment);
   const getTeamDisplayName = useStore((s) => s.getTeamDisplayName);
   const [showCreate, setShowCreate] = useState(false);
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
 
   const searchTypeLabels: Record<string, string> = {
     hasty: t('task.hasty'),
@@ -82,11 +85,20 @@ export default function TasksKanban({ missionId }: Props) {
                     <p className="text-xs text-gray-500">{searchTypeLabels[task.searchType]}</p>
                     {task.assignedTeamId && (
                       <p className="text-xs text-hgss-blue mt-1 font-medium">
-                        &rarr; {getTeamDisplayName(task.assignedTeamId)}
+                        {'→'} {getTeamDisplayName(task.assignedTeamId)}
                       </p>
                     )}
                     {task.notes && (
                       <p className="text-xs text-gray-400 mt-1 line-clamp-2">{task.notes}</p>
+                    )}
+                    {isController && (
+                      <button
+                        onPointerDown={(e) => e.stopPropagation()}
+                        onClick={(e) => { e.stopPropagation(); setEditingTask(task); }}
+                        className="text-xs text-gray-500 hover:text-hgss-blue hover:underline mt-1"
+                      >
+                        {t('task.edit')}
+                      </button>
                     )}
                   </KanbanCard>
                 ))}
@@ -101,6 +113,8 @@ export default function TasksKanban({ missionId }: Props) {
       )}
 
       {showCreate && <CreateTaskDialog missionId={missionId} onClose={() => setShowCreate(false)} />}
+
+      {editingTask && <EditTaskDialog task={editingTask} onClose={() => setEditingTask(null)} />}
     </div>
   );
 }

@@ -89,7 +89,8 @@
     "roadPatrol": "Ophodnja ceste",
     "baseSupport": "Potpora baze",
     "selectTask": "Odaberite zadatak",
-    "noTask": "Nema dodijeljenog zadatka"
+    "noTask": "Nema dodijeljenog zadatka",
+    "edit": "Uredi zadatak"
   },
   "control": {
     "youHaveControl": "Vi imate kontrolu",
