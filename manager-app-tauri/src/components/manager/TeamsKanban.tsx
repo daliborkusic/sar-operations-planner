@@ -24,18 +24,28 @@ export default function TeamsKanban({ periodId }: Props) {
   const allTeams = useStore((s) => s.teams);
   const allTasks = useStore((s) => s.tasks);
   const allPeriods = useStore((s) => s.periods);
-  const period = allPeriods.find((p) => p.id === periodId);
-  const missionId = period?.missionId ?? '';
-  const teams = allTeams.filter((te) => te.periodId === periodId);
   const currentManagerUserId = useStore((s) => s.currentManagerUser?.id);
-  const controllerId = useStore((s) => s.controllers[missionId]);
-  const isController = !!currentManagerUserId && controllerId === currentManagerUserId;
   const moveTeamToStatus = useStore((s) => s.moveTeamToStatus);
   const revokeTaskFromTeam = useStore((s) => s.revokeTaskFromTeam);
   const getTeamDisplayName = useStore((s) => s.getTeamDisplayName);
   const getTeamMembers = useStore((s) => s.getTeamMembers);
   const createTeamAsManager = useStore((s) => s.createTeamAsManager);
   const renameTeam = useStore((s) => s.renameTeam);
+  const teamFilter = useStore((s) => s.teamFilter);
+  const setTeamFilter = useStore((s) => s.setTeamFilter);
+  const period = allPeriods.find((p) => p.id === periodId);
+  const missionId = period?.missionId ?? '';
+  const controllerId = useStore((s) => s.controllers[missionId]);
+  const isController = !!currentManagerUserId && controllerId === currentManagerUserId;
+  const allPeriodTeams = allTeams.filter((te) => te.periodId === periodId);
+  const teamFilterLower = teamFilter.search.toLowerCase();
+  const teams = teamFilterLower
+    ? allPeriodTeams.filter((te) => {
+        if ((te.name || '').toLowerCase().includes(teamFilterLower)) return true;
+        const members = getTeamMembers(te.id);
+        return members.some((m) => m.name.toLowerCase().includes(teamFilterLower));
+      })
+    : allPeriodTeams;
   const [assigningTeamId, setAssigningTeamId] = useState<string | null>(null);
   const [dissolvingTeamId, setDissolvingTeamId] = useState<string | null>(null);
   const [renamingTeamId, setRenamingTeamId] = useState<string | null>(null);
@@ -95,6 +105,16 @@ export default function TeamsKanban({ periodId }: Props) {
             + {t('team.create')}
           </button>
         )}
+      </div>
+
+      <div className="mb-3">
+        <input
+          type="text"
+          value={teamFilter.search}
+          onChange={(e) => setTeamFilter({ search: e.target.value })}
+          placeholder={t('common.search')}
+          className="w-full px-3 py-1.5 border rounded text-sm"
+        />
       </div>
 
       <DndContext onDragEnd={handleDragEnd}>

@@ -4,9 +4,10 @@ import { useStore } from '../../store';
 
 interface Props {
   missionId: string;
+  periodId?: string;
 }
 
-export default function MissionLobby({ missionId }: Props) {
+export default function MissionLobby({ missionId, periodId }: Props) {
   const { t } = useTranslation();
   const missions = useStore((s) => s.missions);
   const allTeams = useStore((s) => s.teams);
@@ -14,25 +15,44 @@ export default function MissionLobby({ missionId }: Props) {
   const users = useStore((s) => s.users);
   const joinTeam = useStore((s) => s.joinTeam);
   const createTeam = useStore((s) => s.createTeam);
+  const joinByLink = useStore((s) => s.joinByLink);
   const [showCreate, setShowCreate] = useState(false);
   const [teamName, setTeamName] = useState('');
+  const [pasteLink, setPasteLink] = useState('');
+  const [linkError, setLinkError] = useState(false);
 
   const allPeriods = useStore((s) => s.periods);
   const mission = missions.find((m) => m.id === missionId);
   if (!mission) return null;
 
-  // Teams are period-scoped; show teams from all periods in this mission
+  // If periodId prop provided, show only that period's teams; else all mission periods
+  const activePeriodId = periodId;
   const missionPeriodIds = allPeriods.filter((p) => p.missionId === missionId).map((p) => p.id);
-  const teams = allTeams.filter((te) => missionPeriodIds.includes(te.periodId) && te.status !== 'dissolved');
+  const teams = allTeams.filter((te) =>
+    activePeriodId ? te.periodId === activePeriodId : missionPeriodIds.includes(te.periodId),
+  ).filter((te) => te.status !== 'dissolved');
 
-  // Use first unlocked period for creating a team
-  const defaultPeriod = allPeriods.find((p) => p.missionId === missionId && !p.locked) ?? allPeriods.find((p) => p.missionId === missionId);
+  // Use the provided periodId or fall back to first unlocked period
+  const effectivePeriod = activePeriodId
+    ? allPeriods.find((p) => p.id === activePeriodId)
+    : (allPeriods.find((p) => p.missionId === missionId && !p.locked) ?? allPeriods.find((p) => p.missionId === missionId));
 
   const handleCreate = () => {
-    if (!defaultPeriod) return;
-    createTeam(defaultPeriod.id, teamName.trim() || undefined);
+    if (!effectivePeriod) return;
+    createTeam(effectivePeriod.id, teamName.trim() || undefined);
     setShowCreate(false);
     setTeamName('');
+  };
+
+  const handlePasteLink = () => {
+    const result = joinByLink(pasteLink.trim());
+    if (!result) {
+      setLinkError(true);
+      setTimeout(() => setLinkError(false), 3000);
+    } else {
+      setPasteLink('');
+      setLinkError(false);
+    }
   };
 
   return (
@@ -95,6 +115,25 @@ export default function MissionLobby({ missionId }: Props) {
           </div>
         </div>
       )}
+
+      <div className="mt-4 border-t pt-4">
+        <p className="text-xs text-gray-500 mb-2">{t('searcher.pasteLink')}</p>
+        <div className="flex gap-2">
+          <input
+            value={pasteLink}
+            onChange={(e) => { setPasteLink(e.target.value); setLinkError(false); }}
+            placeholder={t('searcher.pasteLinkPlaceholder')}
+            className={`flex-1 p-2 border rounded text-sm ${linkError ? 'border-red-400' : ''}`}
+          />
+          <button
+            onClick={handlePasteLink}
+            className="px-3 py-2 bg-hgss-blue text-white rounded text-sm"
+          >
+            {t('team.join')}
+          </button>
+        </div>
+        {linkError && <p className="text-xs text-red-500 mt-1">{t('searcher.invalidLink')}</p>}
+      </div>
     </div>
   );
 }

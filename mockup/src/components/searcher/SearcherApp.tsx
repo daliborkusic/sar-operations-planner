@@ -15,12 +15,15 @@ function SearcherMissionView({ missionId }: { missionId: string }) {
   const missions = useStore((s) => s.missions);
   const leaveMission = useStore((s) => s.leaveMission);
   const setSelectedSearcherMission = useStore((s) => s.setSelectedSearcherMission);
+  const selectedSearcherPeriodId = useStore((s) => s.selectedSearcherPeriodId);
+  const setSelectedSearcherPeriod = useStore((s) => s.setSelectedSearcherPeriod);
 
   const allPeriods = useStore((s) => s.periods);
   const mission = missions.find((m) => m.id === missionId);
   if (!mission) return null;
 
   const missionPeriodIds = allPeriods.filter((p) => p.missionId === missionId).map((p) => p.id);
+  const unlockedPeriods = allPeriods.filter((p) => p.missionId === missionId && !p.locked);
   const tm = currentUser ? allTeamMembers.find((m) => {
     const team = allTeams.find((te) => te.id === m.teamId);
     return m.userId === currentUser.id && m.active && team && missionPeriodIds.includes(team.periodId);
@@ -43,11 +46,83 @@ function SearcherMissionView({ missionId }: { missionId: string }) {
     );
   }
 
+  // If user is already in a team, skip period selection and show team view or lobby
+  if (team && team.status !== 'dissolved') {
+    return (
+      <div className="flex-1 flex flex-col">
+        <div className="bg-gray-50 px-4 py-2 flex items-center justify-between border-b">
+          <button onClick={() => setSelectedSearcherMission(null)} className="text-hgss-blue text-xs">
+            {'←'} {t('mission.backToList')}
+          </button>
+          <button
+            onClick={() => { if (confirm(t('mission.leaveConfirm'))) leaveMission(missionId); }}
+            className="text-xs text-red-500"
+          >
+            {t('mission.leave')}
+          </button>
+        </div>
+        <TeamView missionId={missionId} />
+      </div>
+    );
+  }
+
+  // Period selection: if no period selected yet, show period picker (auto-select if only one)
+  const effectivePeriodId = selectedSearcherPeriodId && missionPeriodIds.includes(selectedSearcherPeriodId)
+    ? selectedSearcherPeriodId
+    : (unlockedPeriods.length === 1 ? unlockedPeriods[0].id : null);
+
+  if (!effectivePeriodId && unlockedPeriods.length !== 1) {
+    return (
+      <div className="flex-1 flex flex-col">
+        <div className="bg-gray-50 px-4 py-2 flex items-center justify-between border-b">
+          <button onClick={() => setSelectedSearcherMission(null)} className="text-hgss-blue text-xs">
+            {'←'} {t('mission.backToList')}
+          </button>
+          <button
+            onClick={() => { if (confirm(t('mission.leaveConfirm'))) leaveMission(missionId); }}
+            className="text-xs text-red-500"
+          >
+            {t('mission.leave')}
+          </button>
+        </div>
+        <div className="p-4">
+          <div className="bg-hgss-blue text-white p-3 rounded-lg mb-4">
+            <p className="text-xs opacity-80">{t('mission.title')}</p>
+            <p className="font-semibold">{mission.name}</p>
+          </div>
+          <p className="text-sm font-semibold text-gray-700 mb-3">{t('searcher.selectPeriod')}</p>
+          {unlockedPeriods.length === 0 ? (
+            <p className="text-gray-400 text-center py-6">{t('period.noperiods')}</p>
+          ) : (
+            <div className="space-y-2">
+              {unlockedPeriods.map((p) => (
+                <button
+                  key={p.id}
+                  onClick={() => setSelectedSearcherPeriod(p.id)}
+                  className="w-full text-left p-3 border rounded-lg hover:bg-blue-50 hover:border-hgss-blue transition-colors"
+                >
+                  <p className="font-medium text-sm">{p.name}</p>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex-1 flex flex-col">
       <div className="bg-gray-50 px-4 py-2 flex items-center justify-between border-b">
-        <button onClick={() => setSelectedSearcherMission(null)} className="text-hgss-blue text-xs">
-          {'←'} {t('mission.backToList')}
+        <button
+          onClick={() => {
+            setSelectedSearcherPeriod(null);
+            if (unlockedPeriods.length !== 1) return;
+            setSelectedSearcherMission(null);
+          }}
+          className="text-hgss-blue text-xs"
+        >
+          {'←'} {unlockedPeriods.length > 1 ? t('searcher.selectPeriod') : t('mission.backToList')}
         </button>
         <button
           onClick={() => { if (confirm(t('mission.leaveConfirm'))) leaveMission(missionId); }}
@@ -56,11 +131,46 @@ function SearcherMissionView({ missionId }: { missionId: string }) {
           {t('mission.leave')}
         </button>
       </div>
-      {team && team.status !== 'dissolved' ? (
-        <TeamView missionId={missionId} />
-      ) : (
-        <MissionLobby missionId={missionId} />
-      )}
+      <MissionLobby missionId={missionId} periodId={effectivePeriodId ?? undefined} />
+    </div>
+  );
+}
+
+function PasteLinkField() {
+  const { t } = useTranslation();
+  const joinByLink = useStore((s) => s.joinByLink);
+  const [pasteLink, setPasteLink] = useState('');
+  const [linkError, setLinkError] = useState(false);
+
+  const handlePaste = () => {
+    const result = joinByLink(pasteLink.trim());
+    if (!result) {
+      setLinkError(true);
+      setTimeout(() => setLinkError(false), 3000);
+    } else {
+      setPasteLink('');
+      setLinkError(false);
+    }
+  };
+
+  return (
+    <div className="px-4 py-3 border-t">
+      <p className="text-xs text-gray-500 mb-2">{t('searcher.pasteLink')}</p>
+      <div className="flex gap-2">
+        <input
+          value={pasteLink}
+          onChange={(e) => { setPasteLink(e.target.value); setLinkError(false); }}
+          placeholder={t('searcher.pasteLinkPlaceholder')}
+          className={`flex-1 p-2 border rounded text-sm ${linkError ? 'border-red-400' : ''}`}
+        />
+        <button
+          onClick={handlePaste}
+          className="px-3 py-2 bg-hgss-blue text-white rounded text-sm"
+        >
+          {t('team.join')}
+        </button>
+      </div>
+      {linkError && <p className="text-xs text-red-500 mt-1">{t('searcher.invalidLink')}</p>}
     </div>
   );
 }
@@ -83,7 +193,7 @@ export default function SearcherApp() {
   }
 
   const userMissions = missionParticipants
-    .filter((mp) => mp.userId === currentUser.id)
+    .filter((mp) => mp.userId === currentUser.id && mp.leftAt === null)
     .map((mp) => missions.find((m) => m.id === mp.missionId))
     .filter(Boolean) as typeof missions;
 
@@ -137,11 +247,17 @@ export default function SearcherApp() {
       )}
 
       {currentUser.type === 'registered' ? (
-        <MissionList />
+        <>
+          <MissionList />
+          <PasteLinkField />
+        </>
       ) : (
         <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
           <div className="text-4xl mb-4">📱</div>
           <p className="text-gray-500">{t('searcher.scanToJoin')}</p>
+          <div className="w-full mt-6">
+            <PasteLinkField />
+          </div>
         </div>
       )}
     </div>

@@ -33,7 +33,7 @@ export default function ParticipantsPanel({ missionId, periodId }: Props) {
     .map((mp) => ({ ...users.find((u) => u.id === mp.userId)!, role: mp.role }));
 
   const assignedUserIds = teamMembers
-    .filter((tm) => teams.some((te) => te.id === tm.teamId))
+    .filter((tm) => tm.active && teams.some((te) => te.id === tm.teamId))
     .map((tm) => tm.userId);
   const unassigned = participants.filter((p) => !assignedUserIds.includes(p.id));
 
@@ -41,7 +41,7 @@ export default function ParticipantsPanel({ missionId, periodId }: Props) {
   const availableToAdd = users.filter((u) => u.type === 'registered' && !participantIds.includes(u.id));
 
   const getParticipantTeam = (userId: string) => {
-    const tm = teamMembers.find((m) => m.userId === userId);
+    const tm = teamMembers.find((m) => m.userId === userId && m.active);
     if (!tm) return null;
     return teams.find((te) => te.id === tm.teamId) || null;
   };

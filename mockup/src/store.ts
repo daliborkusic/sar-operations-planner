@@ -97,6 +97,8 @@ interface AppState {
   unlockPeriod: (periodId: string) => void;
   renamePeriod: (periodId: string, name: string) => void;
 
+  joinByLink: (link: string) => 'mission' | 'team' | null;
+
   getUserMission: (userId: string) => Mission | undefined;
   getUserTeam: (userId: string) => Team | undefined;
   getTeamLeader: (teamId: string) => User | undefined;
@@ -879,6 +881,26 @@ export const useStore = create<AppState>((set, get) => ({
     set((s) => ({
       periods: s.periods.map((p) => (p.id === periodId ? { ...p, name } : p)),
     }));
+  },
+
+  joinByLink: (link) => {
+    const missionMatch = link.match(/^cmrs:\/\/mission\/(.+)$/);
+    if (missionMatch) {
+      const joinCode = missionMatch[1];
+      const mission = get().missions.find((m) => m.joinCode === joinCode);
+      if (!mission) return null;
+      get().joinMission(mission.id);
+      return 'mission';
+    }
+    const teamMatch = link.match(/^cmrs:\/\/team\/(.+)$/);
+    if (teamMatch) {
+      const joinCode = teamMatch[1];
+      const team = get().teams.find((t) => t.joinCode === joinCode);
+      if (!team) return null;
+      get().joinTeam(team.id);
+      return 'team';
+    }
+    return null;
   },
 
   getUserMission: (userId) => {

@@ -24,6 +24,7 @@ export default function MissionControls({ missionId }: Props) {
   const updateMissionStatus = useStore((s) => s.updateMissionStatus);
   const deleteMission = useStore((s) => s.deleteMission);
   const [showQr, setShowQr] = useState(false);
+  const [copied, setCopied] = useState(false);
   const [showTakeControl, setShowTakeControl] = useState(false);
   const [showSuspend, setShowSuspend] = useState(false);
   const [showClose, setShowClose] = useState(false);
@@ -50,6 +51,20 @@ export default function MissionControls({ missionId }: Props) {
         <div className="flex flex-col items-center py-4 mb-4 bg-gray-50 rounded-lg">
           <QRCodeSVG value={`cmrs://mission/${mission.joinCode}`} size={160} />
           <p className="text-xs text-gray-500 mt-2">{mission.joinCode}</p>
+          <div className="flex items-center gap-2 mt-2">
+            <p className="text-xs text-gray-700 font-mono">cmrs://mission/{mission.joinCode}</p>
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(`cmrs://mission/${mission.joinCode}`);
+                setCopied(true);
+                setTimeout(() => setCopied(false), 2000);
+              }}
+              className="text-xs px-2 py-0.5 bg-hgss-blue text-white rounded"
+            >
+              {copied ? t('common.copied') : t('common.copy')}
+            </button>
+          </div>
+          <p className="text-xs text-gray-500 mt-1">{t('mission.joinLink')}</p>
         </div>
       )}
 

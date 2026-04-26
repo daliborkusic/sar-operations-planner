@@ -179,14 +179,14 @@ Two paths:
 - **Registered user pre-assigned to a team** → straight to Team View (auto-placed in correct mission + period)
 - **Registered user pre-assigned to a mission (no team)** → Period Selection → Mission Lobby
 - **Registered user with no assignment** → My Missions list (if any) + Active Missions List
-- **Anonymous user** → message: "Scan a QR code or open a link to join a mission or team"
+- **Anonymous user** → message: "Scan a QR code or open a link to join a mission or team" + paste link field
 
 ### 3. My Missions + Active Missions List
 
 - "My Missions" section at top: missions the user has already joined (tap to view)
 - Active Missions List below (registered users only): all active missions they haven't joined yet
 - Tap to join — user can be in multiple missions simultaneously
-- Scan QR / open link option also available
+- Scan QR / open link / paste link option also available
 - Missions the user has already joined do not appear in the join list
 
 ### 4. Period Selection (after joining mission)
@@ -199,8 +199,8 @@ Two paths:
 
 - Shows current operational period name
 - "Waiting for team assignment" message
-- Scan team QR / open team link to join a team
-- "Create a team" button → user becomes team leader, can display QR and share link
+- Scan team QR / open team link / paste team link to join a team
+- "Create a team" button → user becomes team leader, can display QR, share link, and copy link
 - "Leave mission" option available
 - "Back to mission list" navigation
 
@@ -209,7 +209,7 @@ Two paths:
 Layout order (top to bottom):
 1. Team name (or leader's name if unnamed) + status badge
 2. Operational period name shown
-3. QR code display button
+3. QR code display button + join link with copy button
 4. Team leader status toggle (Resting ↔ Idle/In Task)
 5. Team members list with names and phone numbers (tap to call), leader indicated
 6. Dissolve team button (leader only) + Leave team button (all members)
@@ -219,7 +219,7 @@ Layout order (top to bottom):
 ### 7. Team Leader Actions (in searcher app)
 
 - Create team and generate QR/link
-- Display/share team QR and link
+- Display/share team QR, link, and copy link to clipboard
 - Toggle team status: Resting ↔ Idle, Resting ↔ In Task (resume)
 - Mark individual tasks as Completed ("Zadatak izvršen") → if no remaining In Progress tasks, team transitions to Idle
 - Dissolve own team (with confirmation)
@@ -243,6 +243,8 @@ Layout order (top to bottom):
 - Mission QR/link → joins mission (then select period)
 - Team QR/link → joins team + mission + period in one step
 - Deep link scheme: `cmrs://mission/{code}` and `cmrs://team/{code}`
+- Links displayed with copy button alongside QR codes (both manager and searcher)
+- Searcher app supports pasting links to join missions/teams (input field for manual entry)
 
 ## Manager App Flow
 
@@ -293,7 +295,8 @@ Two kanban boards below, scoped to the selected period. Side-by-side on desktop,
   - Dissolved teams: shown as full cards, cannot be dragged — permanent state
 - Tap card for full team details, members (active + historical) with AD attributes, phones
 - "+ New team" button creates empty teams (first member assigned becomes leader)
-- **Filtering**: filter teams by team name or team member name
+- **Filtering**: search bar to filter teams by team name or team member name (first/last)
+- Mission join link displayed alongside QR code with copy button
 
 ### 4. Participants Panel (sidebar on desktop, slide-out drawer on mobile)
 

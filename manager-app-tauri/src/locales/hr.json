@@ -12,7 +12,9 @@
     "email": "Email",
     "filter": "Filtriraj",
     "all": "Sve",
-    "search": "Pretraži..."
+    "search": "Pretraži...",
+    "copy": "Kopiraj",
+    "copied": "Kopirano!"
   },
   "views": {
     "searcher": "Spašavatelj",
@@ -40,6 +42,7 @@
     "delete": "Obriši akciju",
     "deleteConfirm": "Jeste li sigurni da želite trajno obrisati ovu akciju? Svi timovi, zadaci i sudionici će biti uklonjeni.",
     "qrCode": "QR kod akcije",
+    "joinLink": "Poveznica za pridruživanje",
     "keepTeams": "Zadrži timove",
     "dissolveTeams": "Raspusti timove",
     "ended": "Akcija je završena",
@@ -136,7 +139,11 @@
     "waitingForTeam": "Čekanje na dodjelu tima",
     "scanToJoin": "Skenirajte QR kod ili otvorite poveznicu za pridruživanje akciji ili timu",
     "createTeam": "Stvori tim",
-    "teamName": "Naziv tima (opcionalno)"
+    "teamName": "Naziv tima (opcionalno)",
+    "pasteLink": "Zalijepite poveznicu",
+    "pasteLinkPlaceholder": "cmrs://mission/... ili cmrs://team/...",
+    "invalidLink": "Neispravna poveznica",
+    "selectPeriod": "Odaberite operacijski period"
   },
   "dashboard": {
     "tasks": "Zadaci",

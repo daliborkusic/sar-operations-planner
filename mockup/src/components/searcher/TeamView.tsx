@@ -34,6 +34,7 @@ export default function TeamView({ missionId }: Props) {
   const leader = team ? allTeamMembers.find((m) => m.teamId === team.id && m.role === 'leader') : undefined;
   const teamDisplayName = team ? (team.name || (leader ? users.find((u) => u.id === leader.userId)?.name : 'Tim') || 'Tim') : '';
   const [showQr, setShowQr] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   if (!team || !currentUser) return null;
 
@@ -81,6 +82,19 @@ export default function TeamView({ missionId }: Props) {
         <div className="flex flex-col items-center py-4 mb-4 bg-gray-50 rounded-lg">
           <QRCodeSVG value={`cmrs://team/${team.joinCode}`} size={160} />
           <p className="text-xs text-gray-500 mt-2">{team.joinCode}</p>
+          <div className="flex items-center gap-2 mt-2">
+            <p className="text-xs text-gray-700 font-mono">cmrs://team/{team.joinCode}</p>
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(`cmrs://team/${team.joinCode}`);
+                setCopied(true);
+                setTimeout(() => setCopied(false), 2000);
+              }}
+              className="text-xs px-2 py-0.5 bg-hgss-blue text-white rounded"
+            >
+              {copied ? t('common.copied') : t('common.copy')}
+            </button>
+          </div>
         </div>
       )}
 
