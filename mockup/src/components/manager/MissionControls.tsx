@@ -31,7 +31,7 @@ export default function MissionControls({ missionId }: Props) {
   const [showDelete, setShowDelete] = useState(false);
 
   const managers = missionParticipants
-    .filter((mp) => mp.missionId === missionId && mp.role === 'manager')
+    .filter((mp) => mp.missionId === missionId && mp.role === 'manager' && !mp.leftAt)
     .map((mp) => allUsers.find((u) => u.id === mp.userId)!)
     .filter(Boolean);
 
