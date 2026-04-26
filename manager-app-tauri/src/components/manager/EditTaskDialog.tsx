@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useStore } from '../../store';
-import type { Task, SearchType, TaskPriority } from '../../types';
+import type { Task, SearchType, TaskPriority, TaskType } from '../../types';
 
 interface Props {
   task: Task;
@@ -13,12 +13,13 @@ export default function EditTaskDialog({ task, onClose }: Props) {
   const updateTask = useStore((s) => s.updateTask);
   const [label, setLabel] = useState(task.label);
   const [searchType, setSearchType] = useState<SearchType>(task.searchType);
+  const [taskType, setTaskType] = useState<TaskType>(task.taskType);
   const [priority, setPriority] = useState<TaskPriority>(task.priority);
   const [notes, setNotes] = useState(task.notes);
 
   const handleSave = () => {
     if (label.trim()) {
-      updateTask(task.id, { label: label.trim(), searchType, priority, notes: notes.trim() });
+      updateTask(task.id, { label: label.trim(), searchType, taskType, priority, notes: notes.trim() });
       onClose();
     }
   };
@@ -31,6 +32,15 @@ export default function EditTaskDialog({ task, onClose }: Props) {
           <div>
             <label className="block text-sm text-gray-600 mb-1">{t('task.label')}</label>
             <input value={label} onChange={(e) => setLabel(e.target.value)} className="w-full p-2 border rounded" />
+          </div>
+          <div>
+            <label className="block text-sm text-gray-600 mb-1">{t('task.taskType')}</label>
+            <select value={taskType} onChange={(e) => setTaskType(e.target.value as TaskType)} className="w-full p-2 border rounded">
+              <option value="ground">{t('task.ground')}</option>
+              <option value="k9">{t('task.k9')}</option>
+              <option value="uav">{t('task.uav')}</option>
+              <option value="police">{t('task.police')}</option>
+            </select>
           </div>
           <div>
             <label className="block text-sm text-gray-600 mb-1">{t('task.searchType')}</label>

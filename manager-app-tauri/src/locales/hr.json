@@ -9,7 +9,10 @@
     "name": "Naziv",
     "description": "Opis",
     "phone": "Telefon",
-    "email": "Email"
+    "email": "Email",
+    "filter": "Filtriraj",
+    "all": "Sve",
+    "search": "Pretraži..."
   },
   "views": {
     "searcher": "Spašavatelj",
@@ -45,6 +48,17 @@
     "myMissions": "Moje akcije",
     "backToList": "Natrag na popis"
   },
+  "period": {
+    "title": "Operacijski periodi",
+    "create": "Novi period",
+    "name": "Naziv perioda",
+    "locked": "Zaključan",
+    "unlocked": "Otključan",
+    "lock": "Zaključaj",
+    "unlock": "Otključaj",
+    "select": "Odaberite period",
+    "noperiods": "Nema operacijskih perioda"
+  },
   "team": {
     "title": "Timovi",
     "create": "Novi tim",
@@ -64,8 +78,9 @@
     "shareLink": "Podijeli poveznicu",
     "selectTeam": "Odaberite tim",
     "noName": "Tim",
-    "rename": "Preimenuj tim",
-    "newName": "Novi naziv tima"
+    "rename": "Preimenuj",
+    "newName": "Novi naziv tima",
+    "tasks": "zadataka"
   },
   "task": {
     "title": "Zadaci",
@@ -76,6 +91,7 @@
     "completed": "Završeno",
     "label": "Oznaka",
     "searchType": "Tip pretrage",
+    "taskType": "Vrsta resursa",
     "priority": "Prioritet",
     "notes": "Bilješke",
     "assignTeam": "Dodijeli tim",
@@ -88,9 +104,13 @@
     "grid": "Sustavna pretraga",
     "roadPatrol": "Ophodnja ceste",
     "baseSupport": "Potpora baze",
+    "ground": "Pješaci",
+    "k9": "K9",
+    "uav": "UAV",
+    "police": "Policija",
     "selectTask": "Odaberite zadatak",
     "noTask": "Nema dodijeljenog zadatka",
-    "edit": "Uredi zadatak"
+    "edit": "Uredi"
   },
   "control": {
     "youHaveControl": "Vi imate kontrolu",

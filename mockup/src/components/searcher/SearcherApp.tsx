@@ -16,12 +16,14 @@ function SearcherMissionView({ missionId }: { missionId: string }) {
   const leaveMission = useStore((s) => s.leaveMission);
   const setSelectedSearcherMission = useStore((s) => s.setSelectedSearcherMission);
 
+  const allPeriods = useStore((s) => s.periods);
   const mission = missions.find((m) => m.id === missionId);
   if (!mission) return null;
 
+  const missionPeriodIds = allPeriods.filter((p) => p.missionId === missionId).map((p) => p.id);
   const tm = currentUser ? allTeamMembers.find((m) => {
     const team = allTeams.find((te) => te.id === m.teamId);
-    return m.userId === currentUser.id && team && team.missionId === missionId;
+    return m.userId === currentUser.id && m.active && team && missionPeriodIds.includes(team.periodId);
   }) : undefined;
   const team = tm ? allTeams.find((te) => te.id === tm.teamId) : undefined;
 

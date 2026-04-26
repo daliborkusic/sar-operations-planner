@@ -1,11 +1,11 @@
 import { create } from 'zustand';
 import type {
-  Mission, User, MissionParticipant, Team, TeamMember, Task,
-  MissionStatus, TeamStatus, TaskStatus, TaskPriority, SearchType,
+  Mission, OperationalPeriod, User, MissionParticipant, Team, TeamMember, Task,
+  MissionStatus, TeamStatus, TaskStatus, TaskPriority, TaskType, SearchType,
   ParticipantRole,
 } from './types';
 import {
-  mockMissions, mockUsers, mockMissionParticipants,
+  mockMissions, mockPeriods, mockUsers, mockMissionParticipants,
   mockTeams, mockTeamMembers, mockTasks, mockControllers,
 } from './mock-data';
 
@@ -22,8 +22,18 @@ interface PendingAssignment {
   teamId?: string;
 }
 
+interface TaskFilter {
+  search: string;
+  taskType: TaskType | null;
+}
+
+interface TeamFilter {
+  search: string;
+}
+
 interface AppState {
   missions: Mission[];
+  periods: OperationalPeriod[];
   users: User[];
   missionParticipants: MissionParticipant[];
   teams: Team[];
@@ -35,13 +45,21 @@ interface AppState {
   currentManagerUser: User | null;
   viewMode: ViewMode;
   selectedMissionId: string | null;
+  selectedPeriodId: string | null;
   selectedSearcherMissionId: string | null;
+  selectedSearcherPeriodId: string | null;
   pendingAssignment: PendingAssignment | null;
+  taskFilter: TaskFilter;
+  teamFilter: TeamFilter;
 
   setViewMode: (mode: ViewMode) => void;
   setSelectedMission: (missionId: string | null) => void;
+  setSelectedPeriod: (periodId: string | null) => void;
   setSelectedSearcherMission: (missionId: string | null) => void;
+  setSelectedSearcherPeriod: (periodId: string | null) => void;
   setPendingAssignment: (pa: PendingAssignment | null) => void;
+  setTaskFilter: (filter: Partial<TaskFilter>) => void;
+  setTeamFilter: (filter: Partial<TeamFilter>) => void;
 
   loginAsRegistered: (userId: string) => void;
   loginAsAnonymous: (name: string, email: string) => void;
@@ -53,19 +71,19 @@ interface AppState {
   removeParticipantFromMission: (missionId: string, userId: string) => void;
   joinTeam: (teamId: string) => void;
   leaveTeam: () => void;
-  createTeam: (missionId: string, name?: string) => void;
+  createTeam: (periodId: string, name?: string) => void;
   toggleTeamResting: (teamId: string) => void;
   markTaskComplete: (taskId: string) => void;
 
   createMission: (name: string, description: string) => void;
   deleteMission: (missionId: string) => void;
   updateMissionStatus: (missionId: string, status: MissionStatus, keepTeams?: boolean) => void;
-  createTask: (missionId: string, label: string, searchType: SearchType, priority: TaskPriority, notes: string) => void;
-  updateTask: (taskId: string, updates: Partial<Pick<Task, 'label' | 'searchType' | 'priority' | 'notes'>>) => void;
+  createTask: (periodId: string, label: string, searchType: SearchType, taskType: TaskType, priority: TaskPriority, notes: string) => void;
+  updateTask: (taskId: string, updates: Partial<Pick<Task, 'label' | 'searchType' | 'taskType' | 'priority' | 'notes'>>) => void;
   moveTaskToStatus: (taskId: string, newStatus: TaskStatus) => void;
   assignTeamToTask: (taskId: string, teamId: string) => void;
   revokeTaskFromTeam: (taskId: string) => void;
-  createTeamAsManager: (missionId: string, name?: string, leaderId?: string) => void;
+  createTeamAsManager: (periodId: string, name?: string, leaderId?: string) => void;
   assignParticipantToTeam: (userId: string, teamId: string) => void;
   removeParticipantFromTeam: (userId: string, teamId: string) => void;
   renameTeam: (teamId: string, name: string) => void;
@@ -74,20 +92,29 @@ interface AppState {
   takeControl: (missionId: string) => void;
   addParticipantToMission: (missionId: string, userId: string, role: ParticipantRole) => void;
 
+  createPeriod: (missionId: string, name: string) => void;
+  lockPeriod: (periodId: string) => void;
+  unlockPeriod: (periodId: string) => void;
+  renamePeriod: (periodId: string, name: string) => void;
+
   getUserMission: (userId: string) => Mission | undefined;
   getUserTeam: (userId: string) => Team | undefined;
   getTeamLeader: (teamId: string) => User | undefined;
   getTeamMembers: (teamId: string) => (User & { role: string })[];
+  getTeamHistory: (teamId: string) => (User & { role: string; active: boolean })[];
+  getTeamTasks: (teamId: string) => Task[];
   getTeamTask: (teamId: string) => Task | undefined;
   getMissionParticipants: (missionId: string) => (User & { role: ParticipantRole })[];
   getUnassignedParticipants: (missionId: string) => User[];
   isController: (missionId: string) => boolean;
   getControllerName: (missionId: string) => string | null;
   getTeamDisplayName: (teamId: string) => string;
+  getPeriodMission: (periodId: string) => Mission | undefined;
 }
 
 export const useStore = create<AppState>((set, get) => ({
   missions: [...mockMissions],
+  periods: [...mockPeriods],
   users: [...mockUsers],
   missionParticipants: [...mockMissionParticipants],
   teams: [...mockTeams],
@@ -99,13 +126,21 @@ export const useStore = create<AppState>((set, get) => ({
   currentManagerUser: mockUsers[0],
   viewMode: 'split',
   selectedMissionId: 'm1',
+  selectedPeriodId: 'p1',
   selectedSearcherMissionId: null,
+  selectedSearcherPeriodId: null,
   pendingAssignment: null,
+  taskFilter: { search: '', taskType: null },
+  teamFilter: { search: '' },
 
   setViewMode: (mode) => set({ viewMode: mode }),
   setSelectedMission: (missionId) => set({ selectedMissionId: missionId }),
+  setSelectedPeriod: (periodId) => set({ selectedPeriodId: periodId }),
   setSelectedSearcherMission: (missionId) => set({ selectedSearcherMissionId: missionId }),
+  setSelectedSearcherPeriod: (periodId) => set({ selectedSearcherPeriodId: periodId }),
   setPendingAssignment: (pa) => set({ pendingAssignment: pa }),
+  setTaskFilter: (filter) => set((s) => ({ taskFilter: { ...s.taskFilter, ...filter } })),
+  setTeamFilter: (filter) => set((s) => ({ teamFilter: { ...s.teamFilter, ...filter } })),
 
   loginAsRegistered: (userId) => {
     const user = get().users.find((u) => u.id === userId);
@@ -128,13 +163,28 @@ export const useStore = create<AppState>((set, get) => ({
     const { currentUser, missionParticipants } = get();
     if (!currentUser) return;
     const already = missionParticipants.find(
-      (mp) => mp.userId === currentUser.id && mp.missionId === missionId,
+      (mp) => mp.userId === currentUser.id && mp.missionId === missionId && mp.leftAt === null,
     );
     if (already) return;
+    // If previously left, rejoin by clearing leftAt
+    const previous = missionParticipants.find(
+      (mp) => mp.userId === currentUser.id && mp.missionId === missionId,
+    );
+    if (previous) {
+      set({
+        missionParticipants: missionParticipants.map((mp) =>
+          mp.userId === currentUser.id && mp.missionId === missionId
+            ? { ...mp, leftAt: null }
+            : mp,
+        ),
+        selectedSearcherMissionId: missionId,
+      });
+      return;
+    }
     set({
       missionParticipants: [
         ...missionParticipants,
-        { userId: currentUser.id, missionId, role: 'searcher', joinedAt: new Date().toISOString() },
+        { userId: currentUser.id, missionId, role: 'searcher', joinedAt: new Date().toISOString(), leftAt: null },
       ],
       selectedSearcherMissionId: missionId,
     });
@@ -143,19 +193,34 @@ export const useStore = create<AppState>((set, get) => ({
   leaveMission: (missionId) => {
     const { currentUser } = get();
     if (!currentUser) return;
+    // Find teams via periods — leave all active teams in this mission
+    const missionPeriodIds = get().periods
+      .filter((p) => p.missionId === missionId)
+      .map((p) => p.id);
     const userTeamsInMission = get().teamMembers.filter((tm) => {
       const team = get().teams.find((t) => t.id === tm.teamId);
-      return tm.userId === currentUser.id && team && team.missionId === missionId && team.status !== 'dissolved';
+      return (
+        tm.userId === currentUser.id &&
+        tm.active &&
+        team &&
+        missionPeriodIds.includes(team.periodId) &&
+        team.status !== 'dissolved'
+      );
     });
     let teamMembers = get().teamMembers;
     let teams = get().teams;
     for (const membership of userTeamsInMission) {
-      teamMembers = teamMembers.filter(
-        (tm) => !(tm.userId === currentUser.id && tm.teamId === membership.teamId),
+      // Mark member inactive instead of deleting
+      teamMembers = teamMembers.map((tm) =>
+        tm.userId === currentUser.id && tm.teamId === membership.teamId
+          ? { ...tm, active: false }
+          : tm,
       );
-      const remaining = teamMembers.filter((tm) => tm.teamId === membership.teamId);
+      const remaining = teamMembers.filter((tm) => tm.teamId === membership.teamId && tm.active);
       if (remaining.length === 0) {
-        teams = teams.map((t) => t.id === membership.teamId ? { ...t, status: 'dissolved' as const } : t);
+        teams = teams.map((t) =>
+          t.id === membership.teamId ? { ...t, status: 'dissolved' as const } : t,
+        );
       } else if (membership.role === 'leader') {
         const next = remaining.sort((a, b) => a.joinedAt.localeCompare(b.joinedAt))[0];
         teamMembers = teamMembers.map((tm) =>
@@ -164,29 +229,45 @@ export const useStore = create<AppState>((set, get) => ({
       }
     }
     set({
-      missionParticipants: get().missionParticipants.filter(
-        (mp) => !(mp.userId === currentUser.id && mp.missionId === missionId),
+      missionParticipants: get().missionParticipants.map((mp) =>
+        mp.userId === currentUser.id && mp.missionId === missionId
+          ? { ...mp, leftAt: new Date().toISOString() }
+          : mp,
       ),
       teamMembers,
       teams,
-      selectedSearcherMissionId: get().selectedSearcherMissionId === missionId ? null : get().selectedSearcherMissionId,
+      selectedSearcherMissionId:
+        get().selectedSearcherMissionId === missionId ? null : get().selectedSearcherMissionId,
     });
   },
 
   removeParticipantFromMission: (missionId, userId) => {
+    const missionPeriodIds = get().periods
+      .filter((p) => p.missionId === missionId)
+      .map((p) => p.id);
     const userTeamsInMission = get().teamMembers.filter((tm) => {
       const team = get().teams.find((t) => t.id === tm.teamId);
-      return tm.userId === userId && team && team.missionId === missionId && team.status !== 'dissolved';
+      return (
+        tm.userId === userId &&
+        tm.active &&
+        team &&
+        missionPeriodIds.includes(team.periodId) &&
+        team.status !== 'dissolved'
+      );
     });
     let teamMembers = get().teamMembers;
     let teams = get().teams;
     for (const membership of userTeamsInMission) {
-      teamMembers = teamMembers.filter(
-        (tm) => !(tm.userId === userId && tm.teamId === membership.teamId),
+      teamMembers = teamMembers.map((tm) =>
+        tm.userId === userId && tm.teamId === membership.teamId
+          ? { ...tm, active: false }
+          : tm,
       );
-      const remaining = teamMembers.filter((tm) => tm.teamId === membership.teamId);
+      const remaining = teamMembers.filter((tm) => tm.teamId === membership.teamId && tm.active);
       if (remaining.length === 0) {
-        teams = teams.map((t) => t.id === membership.teamId ? { ...t, status: 'dissolved' as const } : t);
+        teams = teams.map((t) =>
+          t.id === membership.teamId ? { ...t, status: 'dissolved' as const } : t,
+        );
       } else if (membership.role === 'leader') {
         const next = remaining.sort((a, b) => a.joinedAt.localeCompare(b.joinedAt))[0];
         teamMembers = teamMembers.map((tm) =>
@@ -195,8 +276,10 @@ export const useStore = create<AppState>((set, get) => ({
       }
     }
     set({
-      missionParticipants: get().missionParticipants.filter(
-        (mp) => !(mp.userId === userId && mp.missionId === missionId),
+      missionParticipants: get().missionParticipants.map((mp) =>
+        mp.userId === userId && mp.missionId === missionId
+          ? { ...mp, leftAt: new Date().toISOString() }
+          : mp,
       ),
       teamMembers,
       teams,
@@ -206,22 +289,46 @@ export const useStore = create<AppState>((set, get) => ({
   joinTeam: (teamId) => {
     const { currentUser, teamMembers } = get();
     if (!currentUser) return;
-    const already = teamMembers.find((tm) => tm.userId === currentUser.id && tm.teamId === teamId);
+    const already = teamMembers.find(
+      (tm) => tm.userId === currentUser.id && tm.teamId === teamId && tm.active,
+    );
     if (already) return;
-    const filtered = teamMembers.filter((tm) => tm.userId !== currentUser.id);
+    // Remove from any other active team memberships
+    const filtered = teamMembers.map((tm) =>
+      tm.userId === currentUser.id && tm.active ? { ...tm, active: false } : tm,
+    );
     const team = get().teams.find((t) => t.id === teamId);
     if (team) {
-      const alreadyInMission = get().missionParticipants.find(
-        (mp) => mp.userId === currentUser.id && mp.missionId === team.missionId,
-      );
-      if (!alreadyInMission) {
-        get().joinMission(team.missionId);
+      const period = get().periods.find((p) => p.id === team.periodId);
+      if (period) {
+        const alreadyInMission = get().missionParticipants.find(
+          (mp) => mp.userId === currentUser.id && mp.missionId === period.missionId && mp.leftAt === null,
+        );
+        if (!alreadyInMission) {
+          get().joinMission(period.missionId);
+        }
       }
     }
+    // Check if previously a member of this team (inactive)
+    const prevMembership = filtered.find(
+      (tm) => tm.userId === currentUser.id && tm.teamId === teamId,
+    );
+    if (prevMembership) {
+      const hasLeader = filtered.some((tm) => tm.teamId === teamId && tm.role === 'leader' && tm.active);
+      set({
+        teamMembers: filtered.map((tm) =>
+          tm.userId === currentUser.id && tm.teamId === teamId
+            ? { ...tm, active: true, role: hasLeader ? 'member' : 'leader' }
+            : tm,
+        ),
+      });
+      return;
+    }
+    const hasLeader = filtered.some((tm) => tm.teamId === teamId && tm.role === 'leader' && tm.active);
     set({
       teamMembers: [
         ...filtered,
-        { teamId, userId: currentUser.id, role: 'member', joinedAt: new Date().toISOString() },
+        { teamId, userId: currentUser.id, role: hasLeader ? 'member' : 'leader', active: true, joinedAt: new Date().toISOString() },
       ],
     });
   },
@@ -229,34 +336,38 @@ export const useStore = create<AppState>((set, get) => ({
   leaveTeam: () => {
     const { currentUser, teamMembers, teams } = get();
     if (!currentUser) return;
-    const membership = teamMembers.find((tm) => tm.userId === currentUser.id);
+    const membership = teamMembers.find((tm) => tm.userId === currentUser.id && tm.active);
     if (!membership) return;
-    const remaining = teamMembers.filter(
-      (tm) => !(tm.userId === currentUser.id && tm.teamId === membership.teamId),
+    const updatedMembers = teamMembers.map((tm) =>
+      tm.userId === currentUser.id && tm.teamId === membership.teamId
+        ? { ...tm, active: false }
+        : tm,
     );
-    const teamStillHasMembers = remaining.some((tm) => tm.teamId === membership.teamId);
-    if (!teamStillHasMembers) {
-      const task = get().tasks.find((t) => t.assignedTeamId === membership.teamId);
+    const remaining = updatedMembers.filter((tm) => tm.teamId === membership.teamId && tm.active);
+    if (remaining.length === 0) {
+      // Dissolve team and revoke all inProgress tasks
+      const teamInProgressTasks = get().tasks.filter(
+        (t) => t.assignedTeamId === membership.teamId && t.status === 'inProgress',
+      );
       set({
-        teamMembers: remaining,
+        teamMembers: updatedMembers,
         teams: teams.map((t) =>
           t.id === membership.teamId ? { ...t, status: 'dissolved' as const } : t,
         ),
-        tasks: task
-          ? get().tasks.map((t) =>
-              t.id === task.id ? { ...t, status: 'unassigned' as const, assignedTeamId: null } : t,
-            )
-          : get().tasks,
+        tasks: get().tasks.map((t) => {
+          if (teamInProgressTasks.some((tp) => tp.id === t.id)) {
+            return { ...t, status: 'unassigned' as const, assignedTeamId: null };
+          }
+          return t;
+        }),
       });
       return;
     }
     if (membership.role === 'leader') {
-      const nextLeader = remaining
-        .filter((tm) => tm.teamId === membership.teamId)
-        .sort((a, b) => a.joinedAt.localeCompare(b.joinedAt))[0];
+      const nextLeader = remaining.sort((a, b) => a.joinedAt.localeCompare(b.joinedAt))[0];
       if (nextLeader) {
         set({
-          teamMembers: remaining.map((tm) =>
+          teamMembers: updatedMembers.map((tm) =>
             tm.teamId === nextLeader.teamId && tm.userId === nextLeader.userId
               ? { ...tm, role: 'leader' }
               : tm,
@@ -265,27 +376,30 @@ export const useStore = create<AppState>((set, get) => ({
         return;
       }
     }
-    set({ teamMembers: remaining });
+    set({ teamMembers: updatedMembers });
   },
 
-  createTeam: (missionId, name) => {
+  createTeam: (periodId, name) => {
     const { currentUser } = get();
     if (!currentUser) return;
     const teamId = genId('t');
     const team: Team = {
       id: teamId,
-      missionId,
+      periodId,
       name: name || undefined,
       status: 'idle',
       joinCode: `T-${teamId}`,
       createdBy: currentUser.id,
     };
-    const filtered = get().teamMembers.filter((tm) => tm.userId !== currentUser.id);
+    // Mark current user inactive in any existing team
+    const filtered = get().teamMembers.map((tm) =>
+      tm.userId === currentUser.id && tm.active ? { ...tm, active: false } : tm,
+    );
     set((s) => ({
       teams: [...s.teams, team],
       teamMembers: [
         ...filtered,
-        { teamId, userId: currentUser.id, role: 'leader', joinedAt: new Date().toISOString() },
+        { teamId, userId: currentUser.id, role: 'leader', active: true, joinedAt: new Date().toISOString() },
       ],
     }));
   },
@@ -295,7 +409,9 @@ export const useStore = create<AppState>((set, get) => ({
       teams: s.teams.map((t) => {
         if (t.id !== teamId) return t;
         if (t.status === 'resting') {
-          const hasTask = s.tasks.some((tk) => tk.assignedTeamId === teamId && tk.status === 'inProgress');
+          const hasTask = s.tasks.some(
+            (tk) => tk.assignedTeamId === teamId && tk.status === 'inProgress',
+          );
           return { ...t, status: hasTask ? 'inTask' : 'idle' };
         }
         if (t.status === 'idle' || t.status === 'inTask') {
@@ -309,14 +425,23 @@ export const useStore = create<AppState>((set, get) => ({
   markTaskComplete: (taskId) => {
     const task = get().tasks.find((t) => t.id === taskId);
     if (!task || task.status !== 'inProgress') return;
+    const teamId = task.assignedTeamId;
+    const now = new Date().toISOString();
+    // Check if team has any OTHER inProgress tasks
+    const otherInProgressTasks = teamId
+      ? get().tasks.filter(
+          (t) => t.id !== taskId && t.assignedTeamId === teamId && t.status === 'inProgress',
+        )
+      : [];
+    const teamGoesIdle = teamId && otherInProgressTasks.length === 0;
     set((s) => ({
       tasks: s.tasks.map((t) =>
-        t.id === taskId ? { ...t, status: 'completed' as const, assignedTeamId: null } : t,
+        t.id === taskId
+          ? { ...t, status: 'completed' as const, assignedTeamId: null, completedAt: now }
+          : t,
       ),
-      teams: task.assignedTeamId
-        ? s.teams.map((t) =>
-            t.id === task.assignedTeamId ? { ...t, status: 'idle' as const } : t,
-          )
+      teams: teamGoesIdle
+        ? s.teams.map((t) => (t.id === teamId ? { ...t, status: 'idle' as const } : t))
         : s.teams,
     }));
   },
@@ -325,6 +450,7 @@ export const useStore = create<AppState>((set, get) => ({
     const { currentManagerUser } = get();
     if (!currentManagerUser) return;
     const missionId = genId('m');
+    const periodId = genId('p');
     const mission: Mission = {
       id: missionId,
       name,
@@ -335,42 +461,75 @@ export const useStore = create<AppState>((set, get) => ({
       createdAt: new Date().toISOString(),
       createdBy: currentManagerUser.id,
     };
+    const defaultPeriod: OperationalPeriod = {
+      id: periodId,
+      missionId,
+      name: 'Period 1',
+      locked: false,
+    };
     set((s) => ({
       missions: [...s.missions, mission],
+      periods: [...s.periods, defaultPeriod],
       missionParticipants: [
         ...s.missionParticipants,
-        { userId: currentManagerUser.id, missionId, role: 'manager', joinedAt: new Date().toISOString() },
+        {
+          userId: currentManagerUser.id,
+          missionId,
+          role: 'manager',
+          joinedAt: new Date().toISOString(),
+          leftAt: null,
+        },
       ],
     }));
   },
 
   deleteMission: (missionId) => {
+    const missionPeriodIds = get().periods
+      .filter((p) => p.missionId === missionId)
+      .map((p) => p.id);
     set((s) => ({
       missions: s.missions.filter((m) => m.id !== missionId),
+      periods: s.periods.filter((p) => p.missionId !== missionId),
       missionParticipants: s.missionParticipants.filter((mp) => mp.missionId !== missionId),
-      teams: s.teams.filter((t) => t.missionId !== missionId),
+      teams: s.teams.filter((t) => !missionPeriodIds.includes(t.periodId)),
       teamMembers: s.teamMembers.filter((tm) => {
         const team = s.teams.find((t) => t.id === tm.teamId);
-        return !team || team.missionId !== missionId;
+        return !team || !missionPeriodIds.includes(team.periodId);
       }),
-      tasks: s.tasks.filter((t) => t.missionId !== missionId),
-      controllers: Object.fromEntries(Object.entries(s.controllers).filter(([k]) => k !== missionId)),
+      tasks: s.tasks.filter((t) => !missionPeriodIds.includes(t.periodId)),
+      controllers: Object.fromEntries(
+        Object.entries(s.controllers).filter(([k]) => k !== missionId),
+      ),
       selectedMissionId: s.selectedMissionId === missionId ? null : s.selectedMissionId,
+      selectedPeriodId: s.selectedPeriodId && missionPeriodIds.includes(s.selectedPeriodId)
+        ? null
+        : s.selectedPeriodId,
     }));
   },
 
   updateMissionStatus: (missionId, status, keepTeams = true) => {
     set((s) => {
+      const missionPeriodIds = s.periods
+        .filter((p) => p.missionId === missionId)
+        .map((p) => p.id);
       let teams = s.teams;
       let tasks = s.tasks;
+      let teamMembers = s.teamMembers;
       if (status === 'suspended' && !keepTeams) {
-        const missionTeamIds = teams.filter((t) => t.missionId === missionId && t.status !== 'dissolved').map((t) => t.id);
+        const missionTeamIds = teams
+          .filter((t) => missionPeriodIds.includes(t.periodId) && t.status !== 'dissolved')
+          .map((t) => t.id);
         teams = teams.map((t) =>
           missionTeamIds.includes(t.id) ? { ...t, status: 'dissolved' as const } : t,
         );
+        teamMembers = teamMembers.map((tm) =>
+          missionTeamIds.includes(tm.teamId) ? { ...tm, active: false } : tm,
+        );
         tasks = tasks.map((t) =>
-          t.missionId === missionId && t.assignedTeamId && missionTeamIds.includes(t.assignedTeamId)
-            ? { ...t, assignedTeamId: null, status: t.status === 'inProgress' ? 'unassigned' as const : t.status }
+          missionPeriodIds.includes(t.periodId) &&
+          t.assignedTeamId &&
+          missionTeamIds.includes(t.assignedTeamId)
+            ? { ...t, assignedTeamId: null, status: t.status === 'inProgress' ? ('unassigned' as const) : t.status }
             : t,
         );
       }
@@ -378,21 +537,25 @@ export const useStore = create<AppState>((set, get) => ({
         missions: s.missions.map((m) => (m.id === missionId ? { ...m, status } : m)),
         teams,
         tasks,
+        teamMembers,
       };
     });
   },
 
-  createTask: (missionId, label, searchType, priority, notes) => {
+  createTask: (periodId, label, searchType, taskType, priority, notes) => {
     const taskId = genId('tk');
     const task: Task = {
       id: taskId,
-      missionId,
+      periodId,
       label,
       searchType,
+      taskType,
       priority,
       notes,
       status: 'draft',
       assignedTeamId: null,
+      startedAt: null,
+      completedAt: null,
     };
     set((s) => ({ tasks: [...s.tasks, task] }));
   },
@@ -410,30 +573,65 @@ export const useStore = create<AppState>((set, get) => ({
       set({ pendingAssignment: { type: 'assignTeamToTask', taskId } });
       return;
     }
-    const shouldReleaseTeam = task.assignedTeamId &&
-      (newStatus === 'completed' || newStatus === 'unassigned' || newStatus === 'draft');
+    const now = new Date().toISOString();
+    const movingBackward =
+      task.assignedTeamId &&
+      (newStatus === 'unassigned' || newStatus === 'draft');
+    const movingToCompleted = newStatus === 'completed';
+
     set((s) => {
       let teams = s.teams;
-      if (shouldReleaseTeam && task.assignedTeamId) {
-        teams = teams.map((t) =>
-          t.id === task.assignedTeamId ? { ...t, status: 'idle' as const } : t,
+      let tasks = s.tasks;
+
+      if (movingBackward && task.assignedTeamId) {
+        // Release task from team, only set team idle if no remaining inProgress tasks
+        const otherInProgress = s.tasks.filter(
+          (t) => t.id !== taskId && t.assignedTeamId === task.assignedTeamId && t.status === 'inProgress',
+        );
+        if (otherInProgress.length === 0) {
+          teams = teams.map((t) =>
+            t.id === task.assignedTeamId ? { ...t, status: 'idle' as const } : t,
+          );
+        }
+        tasks = tasks.map((t) =>
+          t.id === taskId
+            ? { ...t, status: newStatus, assignedTeamId: null }
+            : t,
+        );
+      } else if (movingToCompleted && task.assignedTeamId) {
+        const otherInProgress = s.tasks.filter(
+          (t) => t.id !== taskId && t.assignedTeamId === task.assignedTeamId && t.status === 'inProgress',
+        );
+        if (otherInProgress.length === 0) {
+          teams = teams.map((t) =>
+            t.id === task.assignedTeamId ? { ...t, status: 'idle' as const } : t,
+          );
+        }
+        tasks = tasks.map((t) =>
+          t.id === taskId
+            ? { ...t, status: newStatus, assignedTeamId: null, completedAt: now }
+            : t,
+        );
+      } else {
+        const startedAt = newStatus === 'inProgress' ? now : task.startedAt;
+        tasks = tasks.map((t) =>
+          t.id === taskId
+            ? { ...t, status: newStatus, startedAt }
+            : t,
         );
       }
-      return {
-        tasks: s.tasks.map((t) =>
-          t.id === taskId
-            ? { ...t, status: newStatus, assignedTeamId: shouldReleaseTeam ? null : t.assignedTeamId }
-            : t,
-        ),
-        teams,
-      };
+
+      return { tasks, teams };
     });
   },
 
   assignTeamToTask: (taskId, teamId) => {
+    const now = new Date().toISOString();
     set((s) => ({
       tasks: s.tasks.map((t) =>
-        t.id === taskId ? { ...t, status: 'inProgress' as const, assignedTeamId: teamId } : t,
+        t.id === taskId
+          ? { ...t, status: 'inProgress' as const, assignedTeamId: teamId, startedAt: now }
+          : t,
       ),
       teams: s.teams.map((t) =>
         t.id === teamId ? { ...t, status: 'inTask' as const } : t,
@@ -446,67 +644,113 @@ export const useStore = create<AppState>((set, get) => ({
     const task = get().tasks.find((t) => t.id === taskId);
     if (!task || !task.assignedTeamId) return;
     const teamId = task.assignedTeamId;
+    // Only set team idle if no other inProgress tasks remain
+    const otherInProgress = get().tasks.filter(
+      (t) => t.id !== taskId && t.assignedTeamId === teamId && t.status === 'inProgress',
+    );
+    const teamGoesIdle = otherInProgress.length === 0;
     set((s) => ({
       tasks: s.tasks.map((t) =>
         t.id === taskId ? { ...t, status: 'unassigned' as const, assignedTeamId: null } : t,
       ),
-      teams: s.teams.map((t) =>
-        t.id === teamId ? { ...t, status: 'idle' as const } : t,
-      ),
+      teams: teamGoesIdle
+        ? s.teams.map((t) => (t.id === teamId ? { ...t, status: 'idle' as const } : t))
+        : s.teams,
     }));
   },
 
-  createTeamAsManager: (missionId, name, leaderId) => {
+  createTeamAsManager: (periodId, name, leaderId) => {
     const teamId = genId('t');
     const { currentManagerUser } = get();
     const team: Team = {
       id: teamId,
-      missionId,
+      periodId,
       name: name || undefined,
       status: 'idle',
       joinCode: `T-${teamId}`,
       createdBy: currentManagerUser?.id || '',
     };
     const newMembers = leaderId
-      ? [{ teamId, userId: leaderId, role: 'leader' as const, joinedAt: new Date().toISOString() }]
+      ? [{ teamId, userId: leaderId, role: 'leader' as const, active: true, joinedAt: new Date().toISOString() }]
       : [];
     set((s) => ({
       teams: [...s.teams, team],
-      teamMembers: [...s.teamMembers.filter((tm) => !leaderId || tm.userId !== leaderId), ...newMembers],
+      teamMembers: [
+        // Mark the leader inactive in any previous team
+        ...s.teamMembers.map((tm) =>
+          leaderId && tm.userId === leaderId && tm.active ? { ...tm, active: false } : tm,
+        ),
+        ...newMembers,
+      ],
     }));
   },
 
   assignParticipantToTeam: (userId, teamId) => {
-    const already = get().teamMembers.find((tm) => tm.userId === userId && tm.teamId === teamId);
+    const already = get().teamMembers.find(
+      (tm) => tm.userId === userId && tm.teamId === teamId && tm.active,
+    );
     if (already) return;
-    const filtered = get().teamMembers.filter((tm) => tm.userId !== userId);
-    const hasLeader = filtered.some((tm) => tm.teamId === teamId && tm.role === 'leader');
+    // Mark user inactive in any other active team membership
+    const updatedMembers = get().teamMembers.map((tm) =>
+      tm.userId === userId && tm.active ? { ...tm, active: false } : tm,
+    );
+    const hasLeader = updatedMembers.some(
+      (tm) => tm.teamId === teamId && tm.role === 'leader' && tm.active,
+    );
+    // Check if user was previously in this team (inactive)
+    const prevMembership = updatedMembers.find(
+      (tm) => tm.userId === userId && tm.teamId === teamId,
+    );
+    if (prevMembership) {
+      set({
+        teamMembers: updatedMembers.map((tm) =>
+          tm.userId === userId && tm.teamId === teamId
+            ? { ...tm, active: true, role: hasLeader ? 'member' : 'leader' }
+            : tm,
+        ),
+      });
+      return;
+    }
     set({
       teamMembers: [
-        ...filtered,
-        { teamId, userId, role: hasLeader ? 'member' : 'leader', joinedAt: new Date().toISOString() },
+        ...updatedMembers,
+        { teamId, userId, role: hasLeader ? 'member' : 'leader', active: true, joinedAt: new Date().toISOString() },
       ],
     });
   },
 
   removeParticipantFromTeam: (userId, teamId) => {
-    const membership = get().teamMembers.find((tm) => tm.userId === userId && tm.teamId === teamId);
-    if (!membership) return;
-    const remaining = get().teamMembers.filter(
-      (tm) => !(tm.userId === userId && tm.teamId === teamId),
+    const membership = get().teamMembers.find(
+      (tm) => tm.userId === userId && tm.teamId === teamId && tm.active,
     );
-    const teamStillHasMembers = remaining.some((tm) => tm.teamId === teamId);
-    if (!teamStillHasMembers) {
-      get().dissolveTeam(teamId);
-      set({ teamMembers: remaining });
+    if (!membership) return;
+    const updatedMembers = get().teamMembers.map((tm) =>
+      tm.userId === userId && tm.teamId === teamId ? { ...tm, active: false } : tm,
+    );
+    const remaining = updatedMembers.filter((tm) => tm.teamId === teamId && tm.active);
+    if (remaining.length === 0) {
+      // Dissolve team — revoke all inProgress tasks, mark all members inactive
+      const teamInProgressTasks = get().tasks.filter(
+        (t) => t.assignedTeamId === teamId && t.status === 'inProgress',
+      );
+      set({
+        teams: get().teams.map((t) =>
+          t.id === teamId ? { ...t, status: 'dissolved' as const } : t,
+        ),
+        teamMembers: updatedMembers,
+        tasks: get().tasks.map((t) => {
+          if (teamInProgressTasks.some((tp) => tp.id === t.id)) {
+            return { ...t, status: 'unassigned' as const, assignedTeamId: null };
+          }
+          return t;
+        }),
+      });
       return;
     }
     if (membership.role === 'leader') {
-      const nextLeader = remaining
-        .filter((tm) => tm.teamId === teamId)
-        .sort((a, b) => a.joinedAt.localeCompare(b.joinedAt))[0];
+      const nextLeader = remaining.sort((a, b) => a.joinedAt.localeCompare(b.joinedAt))[0];
       set({
-        teamMembers: remaining.map((tm) =>
+        teamMembers: updatedMembers.map((tm) =>
           tm.teamId === nextLeader.teamId && tm.userId === nextLeader.userId
             ? { ...tm, role: 'leader' }
             : tm,
@@ -514,7 +758,7 @@ export const useStore = create<AppState>((set, get) => ({
       });
       return;
     }
-    set({ teamMembers: remaining });
+    set({ teamMembers: updatedMembers });
   },
 
   renameTeam: (teamId, name) => {
@@ -524,17 +768,23 @@ export const useStore = create<AppState>((set, get) => ({
   },
 
   dissolveTeam: (teamId) => {
-    const task = get().tasks.find((t) => t.assignedTeamId === teamId);
+    // Revoke all inProgress tasks assigned to this team
+    const teamInProgressTasks = get().tasks.filter(
+      (t) => t.assignedTeamId === teamId && t.status === 'inProgress',
+    );
     set((s) => ({
       teams: s.teams.map((t) =>
         t.id === teamId ? { ...t, status: 'dissolved' as const } : t,
       ),
-      tasks: task
-        ? s.tasks.map((t) =>
-            t.id === task.id ? { ...t, status: 'unassigned' as const, assignedTeamId: null } : t,
-          )
-        : s.tasks,
-      teamMembers: s.teamMembers.filter((tm) => tm.teamId !== teamId),
+      tasks: s.tasks.map((t) => {
+        if (teamInProgressTasks.some((tp) => tp.id === t.id)) {
+          return { ...t, status: 'unassigned' as const, assignedTeamId: null };
+        }
+        return t;
+      }),
+      teamMembers: s.teamMembers.map((tm) =>
+        tm.teamId === teamId ? { ...tm, active: false } : tm,
+      ),
     }));
   },
 
@@ -544,6 +794,24 @@ export const useStore = create<AppState>((set, get) => ({
     if (newStatus === 'dissolved') {
       get().dissolveTeam(teamId);
       return;
+    }
+    if (newStatus === 'idle') {
+      // Forcibly revoke all assigned inProgress tasks
+      const teamInProgressTasks = get().tasks.filter(
+        (t) => t.assignedTeamId === teamId && t.status === 'inProgress',
+      );
+      if (teamInProgressTasks.length > 0) {
+        set((s) => ({
+          tasks: s.tasks.map((t) => {
+            if (teamInProgressTasks.some((tp) => tp.id === t.id)) {
+              return { ...t, status: 'unassigned' as const, assignedTeamId: null };
+            }
+            return t;
+          }),
+          teams: s.teams.map((t) => (t.id === teamId ? { ...t, status: newStatus } : t)),
+        }));
+        return;
+      }
     }
     set((s) => ({
       teams: s.teams.map((t) => (t.id === teamId ? { ...t, status: newStatus } : t)),
@@ -560,38 +828,96 @@ export const useStore = create<AppState>((set, get) => ({
 
   addParticipantToMission: (missionId, userId, role) => {
     const already = get().missionParticipants.find(
-      (mp) => mp.userId === userId && mp.missionId === missionId,
+      (mp) => mp.userId === userId && mp.missionId === missionId && mp.leftAt === null,
     );
     if (already) return;
+    const previous = get().missionParticipants.find(
+      (mp) => mp.userId === userId && mp.missionId === missionId,
+    );
+    if (previous) {
+      set((s) => ({
+        missionParticipants: s.missionParticipants.map((mp) =>
+          mp.userId === userId && mp.missionId === missionId
+            ? { ...mp, leftAt: null, role }
+            : mp,
+        ),
+      }));
+      return;
+    }
     set((s) => ({
       missionParticipants: [
         ...s.missionParticipants,
-        { userId, missionId, role, joinedAt: new Date().toISOString() },
+        { userId, missionId, role, joinedAt: new Date().toISOString(), leftAt: null },
       ],
     }));
   },
 
+  createPeriod: (missionId, name) => {
+    const periodId = genId('p');
+    const period: OperationalPeriod = {
+      id: periodId,
+      missionId,
+      name,
+      locked: false,
+    };
+    set((s) => ({ periods: [...s.periods, period] }));
+  },
+
+  lockPeriod: (periodId) => {
+    set((s) => ({
+      periods: s.periods.map((p) => (p.id === periodId ? { ...p, locked: true } : p)),
+    }));
+  },
+
+  unlockPeriod: (periodId) => {
+    set((s) => ({
+      periods: s.periods.map((p) => (p.id === periodId ? { ...p, locked: false } : p)),
+    }));
+  },
+
+  renamePeriod: (periodId, name) => {
+    set((s) => ({
+      periods: s.periods.map((p) => (p.id === periodId ? { ...p, name } : p)),
+    }));
+  },
+
   getUserMission: (userId) => {
-    const mp = get().missionParticipants.find((p) => p.userId === userId);
+    const mp = get().missionParticipants.find(
+      (p) => p.userId === userId && p.leftAt === null,
+    );
     return mp ? get().missions.find((m) => m.id === mp.missionId) : undefined;
   },
 
   getUserTeam: (userId) => {
-    const tm = get().teamMembers.find((m) => m.userId === userId);
+    const tm = get().teamMembers.find((m) => m.userId === userId && m.active);
     return tm ? get().teams.find((t) => t.id === tm.teamId) : undefined;
   },
 
   getTeamLeader: (teamId) => {
-    const leader = get().teamMembers.find((tm) => tm.teamId === teamId && tm.role === 'leader');
+    const leader = get().teamMembers.find(
+      (tm) => tm.teamId === teamId && tm.role === 'leader' && tm.active,
+    );
     return leader ? get().users.find((u) => u.id === leader.userId) : undefined;
   },
 
   getTeamMembers: (teamId) => {
-    const members = get().teamMembers.filter((tm) => tm.teamId === teamId);
+    const members = get().teamMembers.filter((tm) => tm.teamId === teamId && tm.active);
     return members.map((tm) => {
       const user = get().users.find((u) => u.id === tm.userId)!;
       return { ...user, role: tm.role };
     });
+  },
+
+  getTeamHistory: (teamId) => {
+    const members = get().teamMembers.filter((tm) => tm.teamId === teamId);
+    return members.map((tm) => {
+      const user = get().users.find((u) => u.id === tm.userId)!;
+      return { ...user, role: tm.role, active: tm.active };
+    });
+  },
+
+  getTeamTasks: (teamId) => {
+    return get().tasks.filter((t) => t.assignedTeamId === teamId && t.status === 'inProgress');
   },
 
   getTeamTask: (teamId) => {
@@ -599,7 +925,9 @@ export const useStore = create<AppState>((set, get) => ({
   },
 
   getMissionParticipants: (missionId) => {
-    const mps = get().missionParticipants.filter((mp) => mp.missionId === missionId);
+    const mps = get().missionParticipants.filter(
+      (mp) => mp.missionId === missionId && mp.leftAt === null,
+    );
     return mps.map((mp) => {
       const user = get().users.find((u) => u.id === mp.userId)!;
       return { ...user, role: mp.role };
@@ -607,11 +935,16 @@ export const useStore = create<AppState>((set, get) => ({
   },
 
   getUnassignedParticipants: (missionId) => {
-    const mps = get().missionParticipants.filter((mp) => mp.missionId === missionId);
+    const mps = get().missionParticipants.filter(
+      (mp) => mp.missionId === missionId && mp.leftAt === null,
+    );
+    const missionPeriodIds = get().periods
+      .filter((p) => p.missionId === missionId)
+      .map((p) => p.id);
     const assignedUserIds = get().teamMembers
       .filter((tm) => {
         const team = get().teams.find((t) => t.id === tm.teamId);
-        return team && team.missionId === missionId && team.status !== 'dissolved';
+        return team && missionPeriodIds.includes(team.periodId) && team.status !== 'dissolved' && tm.active;
       })
       .map((tm) => tm.userId);
     return mps
@@ -637,5 +970,10 @@ export const useStore = create<AppState>((set, get) => ({
     if (team.name) return team.name;
     const leader = get().getTeamLeader(teamId);
     return leader ? leader.name : 'Tim';
+  },
+
+  getPeriodMission: (periodId) => {
+    const period = get().periods.find((p) => p.id === periodId);
+    return period ? get().missions.find((m) => m.id === period.missionId) : undefined;
   },
 }));

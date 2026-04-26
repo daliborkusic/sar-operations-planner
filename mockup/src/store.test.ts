@@ -24,7 +24,8 @@ describe('store', () => {
   });
 
   describe('markTaskComplete', () => {
-    it('completes task and sets team to idle', () => {
+    it('completes task and keeps team inTask when another task remains', () => {
+      // t1 has tk1 and tk6 both inProgress in mock data
       const { markTaskComplete } = useStore.getState();
       markTaskComplete('tk1');
       const state = useStore.getState();
@@ -32,6 +33,17 @@ describe('store', () => {
       const team = state.teams.find((t) => t.id === 't1')!;
       expect(task.status).toBe('completed');
       expect(task.assignedTeamId).toBeNull();
+      // tk6 still inProgress for t1 → team stays inTask
+      expect(team.status).toBe('inTask');
+    });
+
+    it('completes task and sets team to idle when last task is done', () => {
+      const { markTaskComplete } = useStore.getState();
+      // Complete both tasks assigned to t1
+      markTaskComplete('tk1');
+      markTaskComplete('tk6');
+      const state = useStore.getState();
+      const team = state.teams.find((t) => t.id === 't1')!;
       expect(team.status).toBe('idle');
     });
 
@@ -44,7 +56,8 @@ describe('store', () => {
   });
 
   describe('revokeTaskFromTeam', () => {
-    it('returns task to unassigned and team to idle', () => {
+    it('returns task to unassigned and keeps team inTask when another task remains', () => {
+      // t1 has tk1 and tk6 both inProgress
       const { revokeTaskFromTeam } = useStore.getState();
       revokeTaskFromTeam('tk1');
       const state = useStore.getState();
@@ -52,6 +65,15 @@ describe('store', () => {
       const team = state.teams.find((t) => t.id === 't1')!;
       expect(task.status).toBe('unassigned');
       expect(task.assignedTeamId).toBeNull();
+      // tk6 still inProgress → team stays inTask
+      expect(team.status).toBe('inTask');
+    });
+
+    it('returns task to unassigned and sets team to idle when last task revoked', () => {
+      const { revokeTaskFromTeam } = useStore.getState();
+      revokeTaskFromTeam('tk1');
+      revokeTaskFromTeam('tk6');
+      const team = useStore.getState().teams.find((t) => t.id === 't1')!;
       expect(team.status).toBe('idle');
     });
   });
@@ -93,21 +115,24 @@ describe('store', () => {
   });
 
   describe('dissolveTeam', () => {
-    it('dissolves team and unassigns its task', () => {
+    it('dissolves team and unassigns all its inProgress tasks', () => {
       const { dissolveTeam } = useStore.getState();
       dissolveTeam('t1');
       const state = useStore.getState();
       const team = state.teams.find((t) => t.id === 't1')!;
-      const task = state.tasks.find((t) => t.id === 'tk1')!;
+      const task1 = state.tasks.find((t) => t.id === 'tk1')!;
+      const task6 = state.tasks.find((t) => t.id === 'tk6')!;
       expect(team.status).toBe('dissolved');
-      expect(task.status).toBe('unassigned');
-      expect(task.assignedTeamId).toBeNull();
+      expect(task1.status).toBe('unassigned');
+      expect(task1.assignedTeamId).toBeNull();
+      expect(task6.status).toBe('unassigned');
+      expect(task6.assignedTeamId).toBeNull();
     });
 
-    it('removes team members on dissolve', () => {
+    it('marks all team members as inactive on dissolve', () => {
       const { dissolveTeam } = useStore.getState();
       dissolveTeam('t1');
-      const members = useStore.getState().teamMembers.filter((tm) => tm.teamId === 't1');
+      const members = useStore.getState().teamMembers.filter((tm) => tm.teamId === 't1' && tm.active);
       expect(members).toHaveLength(0);
     });
   });
@@ -122,11 +147,21 @@ describe('store', () => {
       expect(task.status).toBe('unassigned');
     });
 
-    it('completing inProgress task sets team to idle', () => {
+    it('completing inProgress task keeps team inTask when another task remains', () => {
+      // t1 has tk1 and tk6 both inProgress
       const { moveTaskToStatus } = useStore.getState();
       moveTaskToStatus('tk1', 'completed');
       const state = useStore.getState();
       const team = state.teams.find((t) => t.id === 't1')!;
+      // tk6 still inProgress → team stays inTask
+      expect(team.status).toBe('inTask');
+    });
+
+    it('completing last inProgress task sets team to idle', () => {
+      const { moveTaskToStatus } = useStore.getState();
+      moveTaskToStatus('tk1', 'completed');
+      moveTaskToStatus('tk6', 'completed');
+      const team = useStore.getState().teams.find((t) => t.id === 't1')!;
       expect(team.status).toBe('idle');
     });
   });
@@ -151,14 +186,14 @@ describe('store', () => {
       expect(m2).toHaveLength(1);
     });
 
-    it('leaving a mission removes participant and team membership', () => {
+    it('leaving a mission marks participant as left and deactivates team membership', () => {
       useStore.getState().loginAsRegistered('u2');
       useStore.getState().leaveMission('m1');
       const state = useStore.getState();
-      const mp = state.missionParticipants.filter((p) => p.userId === 'u2' && p.missionId === 'm1');
+      const mp = state.missionParticipants.filter((p) => p.userId === 'u2' && p.missionId === 'm1' && p.leftAt === null);
       expect(mp).toHaveLength(0);
-      const tm = state.teamMembers.filter((m) => m.userId === 'u2');
-      expect(tm).toHaveLength(0);
+      const activeTm = state.teamMembers.filter((m) => m.userId === 'u2' && m.active);
+      expect(activeTm).toHaveLength(0);
     });
   });
 
@@ -167,7 +202,7 @@ describe('store', () => {
       useStore.getState().loginAsRegistered('u2');
       useStore.getState().leaveTeam();
       const state = useStore.getState();
-      const newLeader = state.teamMembers.find((tm) => tm.teamId === 't1' && tm.role === 'leader');
+      const newLeader = state.teamMembers.find((tm) => tm.teamId === 't1' && tm.role === 'leader' && tm.active);
       expect(newLeader).toBeDefined();
       expect(newLeader!.userId).toBe('u3');
     });
@@ -190,9 +225,10 @@ describe('store', () => {
       const { updateMissionStatus } = useStore.getState();
       updateMissionStatus('m1', 'suspended', false);
       const state = useStore.getState();
-      const activeTeams = state.teams.filter((t) => t.missionId === 'm1' && t.status !== 'dissolved');
+      const m1PeriodIds = state.periods.filter((p) => p.missionId === 'm1').map((p) => p.id);
+      const activeTeams = state.teams.filter((t) => m1PeriodIds.includes(t.periodId) && t.status !== 'dissolved');
       expect(activeTeams).toHaveLength(0);
-      const inProgressTasks = state.tasks.filter((t) => t.missionId === 'm1' && t.status === 'inProgress');
+      const inProgressTasks = state.tasks.filter((t) => m1PeriodIds.includes(t.periodId) && t.status === 'inProgress');
       expect(inProgressTasks).toHaveLength(0);
     });
 
@@ -202,8 +238,26 @@ describe('store', () => {
       const state = useStore.getState();
       const mission = state.missions.find((m) => m.id === 'm1')!;
       expect(mission.status).toBe('suspended');
-      const activeTeams = state.teams.filter((t) => t.missionId === 'm1' && t.status !== 'dissolved');
+      const m1PeriodIds = state.periods.filter((p) => p.missionId === 'm1').map((p) => p.id);
+      const activeTeams = state.teams.filter((t) => m1PeriodIds.includes(t.periodId) && t.status !== 'dissolved');
       expect(activeTeams.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe('multi-task', () => {
+    it('completing one task keeps team inTask when another task remains', () => {
+      const state0 = useStore.getState();
+      // Assign a second task to team t1 (tk2 is unassigned)
+      state0.assignTeamToTask('tk2', 't1');
+      // Now t1 has tk1 (inProgress) and tk2 (inProgress)
+      state0.markTaskComplete('tk1');
+      const state = useStore.getState();
+      const team = state.teams.find((t) => t.id === 't1')!;
+      const completedTask = state.tasks.find((t) => t.id === 'tk1')!;
+      const remainingTask = state.tasks.find((t) => t.id === 'tk2')!;
+      expect(completedTask.status).toBe('completed');
+      expect(remainingTask.status).toBe('inProgress');
+      expect(team.status).toBe('inTask');
     });
   });
 });

@@ -4,14 +4,14 @@ import StatusBadge from '../StatusBadge';
 
 interface Props {
   teamId: string;
-  missionId: string;
+  periodId: string;
   onClose: () => void;
 }
 
-export default function TaskAssignDialog({ teamId, missionId, onClose }: Props) {
+export default function TaskAssignDialog({ teamId, periodId, onClose }: Props) {
   const { t } = useTranslation();
   const allTasks = useStore((s) => s.tasks);
-  const tasks = allTasks.filter((tk) => tk.missionId === missionId && tk.status === 'unassigned');
+  const tasks = allTasks.filter((tk) => tk.periodId === periodId && tk.status === 'unassigned');
   const assignTeamToTask = useStore((s) => s.assignTeamToTask);
 
   const searchTypeLabels: Record<string, string> = {

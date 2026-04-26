@@ -3,6 +3,7 @@ export type TeamStatus = 'resting' | 'idle' | 'inTask' | 'dissolved';
 export type TaskStatus = 'draft' | 'unassigned' | 'inProgress' | 'completed';
 export type TaskPriority = 'high' | 'medium' | 'low';
 export type SearchType = 'hasty' | 'grid' | 'roadPatrol' | 'baseSupport';
+export type TaskType = 'ground' | 'k9' | 'uav' | 'police';
 export type ParticipantRole = 'searcher' | 'manager';
 export type TeamMemberRole = 'leader' | 'member';
 export type UserType = 'registered' | 'anonymous';
@@ -16,6 +17,13 @@ export interface Mission {
   joinCode: string;
   createdAt: string;
   createdBy: string;
+}
+
+export interface OperationalPeriod {
+  id: string;
+  missionId: string;
+  name: string;
+  locked: boolean;
 }
 
 export interface User {
@@ -34,11 +42,12 @@ export interface MissionParticipant {
   missionId: string;
   role: ParticipantRole;
   joinedAt: string;
+  leftAt: string | null;
 }
 
 export interface Team {
   id: string;
-  missionId: string;
+  periodId: string;
   name?: string;
   status: TeamStatus;
   joinCode: string;
@@ -49,16 +58,20 @@ export interface TeamMember {
   teamId: string;
   userId: string;
   role: TeamMemberRole;
+  active: boolean;
   joinedAt: string;
 }
 
 export interface Task {
   id: string;
-  missionId: string;
+  periodId: string;
   label: string;
   searchType: SearchType;
+  taskType: TaskType;
   priority: TaskPriority;
   notes: string;
   status: TaskStatus;
   assignedTeamId: string | null;
+  startedAt: string | null;
+  completedAt: string | null;
 }

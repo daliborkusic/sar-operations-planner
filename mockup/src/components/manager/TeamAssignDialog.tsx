@@ -3,14 +3,14 @@ import { useStore } from '../../store';
 
 interface Props {
   taskId: string;
-  missionId: string;
+  periodId: string;
   onClose: () => void;
 }
 
-export default function TeamAssignDialog({ taskId, missionId, onClose }: Props) {
+export default function TeamAssignDialog({ taskId, periodId, onClose }: Props) {
   const { t } = useTranslation();
   const allTeams = useStore((s) => s.teams);
-  const teams = allTeams.filter((te) => te.missionId === missionId && (te.status === 'idle' || te.status === 'resting'));
+  const teams = allTeams.filter((te) => te.periodId === periodId && (te.status === 'idle' || te.status === 'resting'));
   const assignTeamToTask = useStore((s) => s.assignTeamToTask);
   const getTeamDisplayName = useStore((s) => s.getTeamDisplayName);
   const getTeamMembers = useStore((s) => s.getTeamMembers);

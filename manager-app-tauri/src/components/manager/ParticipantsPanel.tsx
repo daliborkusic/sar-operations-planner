@@ -5,15 +5,20 @@ import StatusBadge from '../StatusBadge';
 
 interface Props {
   missionId: string;
+  periodId?: string;
 }
 
-export default function ParticipantsPanel({ missionId }: Props) {
+export default function ParticipantsPanel({ missionId, periodId }: Props) {
   const { t } = useTranslation();
   const missionParticipants = useStore((s) => s.missionParticipants);
   const users = useStore((s) => s.users);
   const teamMembers = useStore((s) => s.teamMembers);
   const allTeams = useStore((s) => s.teams);
-  const teams = allTeams.filter((te) => te.missionId === missionId && te.status !== 'dissolved');
+  const allPeriods = useStore((s) => s.periods);
+  const missionPeriodIds = allPeriods.filter((p) => p.missionId === missionId).map((p) => p.id);
+  // Show teams from selected period if provided, otherwise all mission periods
+  const relevantPeriodIds = periodId ? [periodId] : missionPeriodIds;
+  const teams = allTeams.filter((te) => relevantPeriodIds.includes(te.periodId) && te.status !== 'dissolved');
   const getTeamDisplayName = useStore((s) => s.getTeamDisplayName);
   const assignParticipantToTeam = useStore((s) => s.assignParticipantToTeam);
   const addParticipantToMission = useStore((s) => s.addParticipantToMission);

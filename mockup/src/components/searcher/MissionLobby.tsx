@@ -17,13 +17,20 @@ export default function MissionLobby({ missionId }: Props) {
   const [showCreate, setShowCreate] = useState(false);
   const [teamName, setTeamName] = useState('');
 
+  const allPeriods = useStore((s) => s.periods);
   const mission = missions.find((m) => m.id === missionId);
   if (!mission) return null;
 
-  const teams = allTeams.filter((te) => te.missionId === missionId && te.status !== 'dissolved');
+  // Teams are period-scoped; show teams from all periods in this mission
+  const missionPeriodIds = allPeriods.filter((p) => p.missionId === missionId).map((p) => p.id);
+  const teams = allTeams.filter((te) => missionPeriodIds.includes(te.periodId) && te.status !== 'dissolved');
+
+  // Use first unlocked period for creating a team
+  const defaultPeriod = allPeriods.find((p) => p.missionId === missionId && !p.locked) ?? allPeriods.find((p) => p.missionId === missionId);
 
   const handleCreate = () => {
-    createTeam(missionId, teamName.trim() || undefined);
+    if (!defaultPeriod) return;
+    createTeam(defaultPeriod.id, teamName.trim() || undefined);
     setShowCreate(false);
     setTeamName('');
   };

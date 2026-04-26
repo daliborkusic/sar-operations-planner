@@ -1,24 +1,25 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useStore } from '../../store';
-import type { SearchType, TaskPriority } from '../../types';
+import type { SearchType, TaskPriority, TaskType } from '../../types';
 
 interface Props {
-  missionId: string;
+  periodId: string;
   onClose: () => void;
 }
 
-export default function CreateTaskDialog({ missionId, onClose }: Props) {
+export default function CreateTaskDialog({ periodId, onClose }: Props) {
   const { t } = useTranslation();
   const createTask = useStore((s) => s.createTask);
   const [label, setLabel] = useState('');
   const [searchType, setSearchType] = useState<SearchType>('hasty');
+  const [taskType, setTaskType] = useState<TaskType>('ground');
   const [priority, setPriority] = useState<TaskPriority>('medium');
   const [notes, setNotes] = useState('');
 
   const handleCreate = () => {
     if (label.trim()) {
-      createTask(missionId, label.trim(), searchType, priority, notes.trim());
+      createTask(periodId, label.trim(), searchType, taskType, priority, notes.trim());
       onClose();
     }
   };
@@ -31,6 +32,15 @@ export default function CreateTaskDialog({ missionId, onClose }: Props) {
           <div>
             <label className="block text-sm text-gray-600 mb-1">{t('task.label')}</label>
             <input value={label} onChange={(e) => setLabel(e.target.value)} className="w-full p-2 border rounded" placeholder="Sektor 5 - ..." />
+          </div>
+          <div>
+            <label className="block text-sm text-gray-600 mb-1">{t('task.taskType')}</label>
+            <select value={taskType} onChange={(e) => setTaskType(e.target.value as TaskType)} className="w-full p-2 border rounded">
+              <option value="ground">{t('task.ground')}</option>
+              <option value="k9">{t('task.k9')}</option>
+              <option value="uav">{t('task.uav')}</option>
+              <option value="police">{t('task.police')}</option>
+            </select>
           </div>
           <div>
             <label className="block text-sm text-gray-600 mb-1">{t('task.searchType')}</label>

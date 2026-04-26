@@ -19,15 +19,18 @@ export default function TeamView({ missionId }: Props) {
   const markTaskComplete = useStore((s) => s.markTaskComplete);
   const leaveTeam = useStore((s) => s.leaveTeam);
 
+  const allPeriods = useStore((s) => s.periods);
+  const missionPeriodIds = allPeriods.filter((p) => p.missionId === missionId).map((p) => p.id);
   const tm = currentUser ? allTeamMembers.find((m) => {
     const team = allTeams.find((te) => te.id === m.teamId);
-    return m.userId === currentUser.id && team && team.missionId === missionId;
+    return m.userId === currentUser.id && m.active && team && missionPeriodIds.includes(team.periodId);
   }) : undefined;
   const team = tm ? allTeams.find((te) => te.id === tm.teamId) : undefined;
   const members = team
-    ? allTeamMembers.filter((m) => m.teamId === team.id).map((m) => ({ ...users.find((u) => u.id === m.userId)!, role: m.role }))
+    ? allTeamMembers.filter((m) => m.teamId === team.id && m.active).map((m) => ({ ...users.find((u) => u.id === m.userId)!, role: m.role }))
     : [];
-  const task = team ? allTasks.find((tk) => tk.assignedTeamId === team.id && tk.status === 'inProgress') : undefined;
+  const teamTasks = team ? allTasks.filter((tk) => tk.assignedTeamId === team.id && tk.status === 'inProgress') : [];
+  const task = teamTasks[0];
   const leader = team ? allTeamMembers.find((m) => m.teamId === team.id && m.role === 'leader') : undefined;
   const teamDisplayName = team ? (team.name || (leader ? users.find((u) => u.id === leader.userId)?.name : 'Tim') || 'Tim') : '';
   const [showQr, setShowQr] = useState(false);
@@ -43,6 +46,20 @@ export default function TeamView({ missionId }: Props) {
     grid: t('task.grid'),
     roadPatrol: t('task.roadPatrol'),
     baseSupport: t('task.baseSupport'),
+  };
+
+  const taskTypeLabels: Record<string, string> = {
+    ground: t('task.ground'),
+    k9: t('task.k9'),
+    uav: t('task.uav'),
+    police: t('task.police'),
+  };
+
+  const taskTypeBadgeColors: Record<string, string> = {
+    ground: 'bg-green-100 text-green-700',
+    k9: 'bg-orange-100 text-orange-700',
+    uav: 'bg-purple-100 text-purple-700',
+    police: 'bg-blue-100 text-blue-700',
   };
 
   return (
@@ -127,22 +144,31 @@ export default function TeamView({ missionId }: Props) {
 
       <div className="mb-6">
         <h3 className="text-sm font-semibold text-gray-700 mb-2">{t('task.title')}</h3>
-        {task ? (
-          <div className="border rounded-lg p-4">
-            <div className="flex items-center justify-between mb-2">
-              <p className="font-medium">{task.label}</p>
-              <StatusBadge status={task.priority} />
-            </div>
-            <p className="text-xs text-gray-500 mb-1">{searchTypeLabels[task.searchType]}</p>
-            {task.notes && <p className="text-sm text-gray-600 mt-2">{task.notes}</p>}
-            {isLeader && (
-              <button
-                onClick={() => markTaskComplete(task.id)}
-                className="w-full mt-3 py-2 bg-green-600 text-white rounded text-sm font-medium"
-              >
-                {t('task.markComplete')}
-              </button>
-            )}
+        {teamTasks.length > 0 ? (
+          <div className="space-y-3">
+            {teamTasks.map((tk) => (
+              <div key={tk.id} className="border rounded-lg p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="font-medium">{tk.label}</p>
+                  <StatusBadge status={tk.priority} />
+                </div>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${taskTypeBadgeColors[tk.taskType]}`}>
+                    {taskTypeLabels[tk.taskType]}
+                  </span>
+                  <p className="text-xs text-gray-500">{searchTypeLabels[tk.searchType]}</p>
+                </div>
+                {tk.notes && <p className="text-sm text-gray-600 mt-2">{tk.notes}</p>}
+                {isLeader && (
+                  <button
+                    onClick={() => markTaskComplete(tk.id)}
+                    className="w-full mt-3 py-2 bg-green-600 text-white rounded text-sm font-medium"
+                  >
+                    {t('task.markComplete')}
+                  </button>
+                )}
+              </div>
+            ))}
           </div>
         ) : (
           <p className="text-gray-400 text-center py-4">{t('task.noTask')}</p>

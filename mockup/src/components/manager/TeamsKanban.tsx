@@ -9,7 +9,7 @@ import TaskAssignDialog from './TaskAssignDialog';
 import ConfirmDialog from '../ConfirmDialog';
 
 interface Props {
-  missionId: string;
+  periodId: string;
 }
 
 const columns: { status: TeamStatus; color: string }[] = [
@@ -19,11 +19,14 @@ const columns: { status: TeamStatus; color: string }[] = [
   { status: 'dissolved', color: 'border-gray-400' },
 ];
 
-export default function TeamsKanban({ missionId }: Props) {
+export default function TeamsKanban({ periodId }: Props) {
   const { t } = useTranslation();
   const allTeams = useStore((s) => s.teams);
   const allTasks = useStore((s) => s.tasks);
-  const teams = allTeams.filter((te) => te.missionId === missionId);
+  const allPeriods = useStore((s) => s.periods);
+  const period = allPeriods.find((p) => p.id === periodId);
+  const missionId = period?.missionId ?? '';
+  const teams = allTeams.filter((te) => te.periodId === periodId);
   const currentManagerUserId = useStore((s) => s.currentManagerUser?.id);
   const controllerId = useStore((s) => s.controllers[missionId]);
   const isController = !!currentManagerUserId && controllerId === currentManagerUserId;
@@ -31,7 +34,6 @@ export default function TeamsKanban({ missionId }: Props) {
   const revokeTaskFromTeam = useStore((s) => s.revokeTaskFromTeam);
   const getTeamDisplayName = useStore((s) => s.getTeamDisplayName);
   const getTeamMembers = useStore((s) => s.getTeamMembers);
-  const getTeamTask = useStore((s) => s.getTeamTask);
   const createTeamAsManager = useStore((s) => s.createTeamAsManager);
   const renameTeam = useStore((s) => s.renameTeam);
   const [assigningTeamId, setAssigningTeamId] = useState<string | null>(null);
@@ -103,7 +105,7 @@ export default function TeamsKanban({ missionId }: Props) {
               <KanbanColumn key={col.status} id={col.status} title={statusLabels[col.status]} count={colTeams.length} color={col.color}>
                 {colTeams.map((team) => {
                   const members = getTeamMembers(team.id);
-                  const task = getTeamTask(team.id);
+                  const teamTasks = allTasks.filter((tk) => tk.assignedTeamId === team.id && tk.status === 'inProgress');
                   return (
                     <KanbanCard key={team.id} id={team.id} disabled={!isController || team.status === 'dissolved'}>
                       <p className="text-sm font-medium mb-1">{getTeamDisplayName(team.id)}</p>
@@ -111,9 +113,16 @@ export default function TeamsKanban({ missionId }: Props) {
                         {members.length} {t('team.members').toLowerCase()}
                         {members.length > 0 && ` — ${members.map((m) => m.name.split(' ')[0]).join(', ')}`}
                       </p>
-                      {task && (
-                        <div className="text-xs bg-blue-50 text-blue-700 p-1.5 rounded mb-2">
-                          {'→'} {task.label}
+                      {teamTasks.length > 0 && (
+                        <div className="mb-2 space-y-1">
+                          {teamTasks.map((tk) => (
+                            <div key={tk.id} className="text-xs bg-blue-50 text-blue-700 p-1.5 rounded">
+                              {'→'} {tk.label}
+                            </div>
+                          ))}
+                          {teamTasks.length > 1 && (
+                            <p className="text-xs text-gray-500">{teamTasks.length} {t('team.tasks')}</p>
+                          )}
                         </div>
                       )}
                       {isController && (
@@ -146,7 +155,7 @@ export default function TeamsKanban({ missionId }: Props) {
       </DndContext>
 
       {assigningTeamId && (
-        <TaskAssignDialog teamId={assigningTeamId} missionId={missionId} onClose={() => setAssigningTeamId(null)} />
+        <TaskAssignDialog teamId={assigningTeamId} periodId={periodId} onClose={() => setAssigningTeamId(null)} />
       )}
 
       {dissolvingTeamId && (
@@ -190,7 +199,7 @@ export default function TeamsKanban({ missionId }: Props) {
             />
             <div className="flex justify-end gap-3">
               <button onClick={() => { setShowCreateTeam(false); setNewTeamName(''); }} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded">{t('common.cancel')}</button>
-              <button onClick={() => { createTeamAsManager(missionId, newTeamName.trim() || undefined); setShowCreateTeam(false); setNewTeamName(''); }} className="px-4 py-2 bg-hgss-blue text-white rounded">{t('common.create')}</button>
+              <button onClick={() => { createTeamAsManager(periodId, newTeamName.trim() || undefined); setShowCreateTeam(false); setNewTeamName(''); }} className="px-4 py-2 bg-hgss-blue text-white rounded">{t('common.create')}</button>
             </div>
           </div>
         </div>
