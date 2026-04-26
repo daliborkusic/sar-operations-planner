@@ -1,4 +1,4 @@
-import type { Mission, OperationalPeriod, User, MissionParticipant, Team, TeamMember, Task } from './types';
+import type { Mission, OperationalPeriod, User, MissionParticipant, PeriodParticipant, Team, TeamMember, Task } from './types';
 
 export const mockUsers: User[] = [
   { id: 'u1', type: 'registered', name: 'Ivan Horvat', email: 'ivan.horvat@hgss.hr', phone: '+385 91 123 4567', station: 'Stanica Zagreb', rank: 'Voditelj', qualifications: 'Alpinizam, Speleologija' },
@@ -36,6 +36,19 @@ export const mockMissionParticipants: MissionParticipant[] = [
   { userId: 'u8', missionId: 'm1', role: 'searcher', joinedAt: '2026-04-23T07:10:00Z', leftAt: null },
   { userId: 'u9', missionId: 'm1', role: 'searcher', joinedAt: '2026-04-23T07:15:00Z', leftAt: null },
   { userId: 'u10', missionId: 'm1', role: 'searcher', joinedAt: '2026-04-23T07:20:00Z', leftAt: null },
+];
+
+export const mockPeriodParticipants: PeriodParticipant[] = [
+  { userId: 'u1', periodId: 'p1', checkedInAt: '2026-04-23T06:00:00Z', checkedOutAt: null },
+  { userId: 'u6', periodId: 'p1', checkedInAt: '2026-04-23T06:15:00Z', checkedOutAt: null },
+  { userId: 'u2', periodId: 'p1', checkedInAt: '2026-04-23T06:30:00Z', checkedOutAt: null },
+  { userId: 'u3', periodId: 'p1', checkedInAt: '2026-04-23T06:35:00Z', checkedOutAt: null },
+  { userId: 'u4', periodId: 'p1', checkedInAt: '2026-04-23T06:40:00Z', checkedOutAt: null },
+  { userId: 'u5', periodId: 'p1', checkedInAt: '2026-04-23T06:45:00Z', checkedOutAt: null },
+  { userId: 'u7', periodId: 'p1', checkedInAt: '2026-04-23T07:00:00Z', checkedOutAt: null },
+  { userId: 'u8', periodId: 'p1', checkedInAt: '2026-04-23T07:10:00Z', checkedOutAt: null },
+  { userId: 'u9', periodId: 'p1', checkedInAt: '2026-04-23T07:15:00Z', checkedOutAt: null },
+  { userId: 'u10', periodId: 'p1', checkedInAt: '2026-04-23T07:20:00Z', checkedOutAt: null },
 ];
 
 export const mockTeams: Team[] = [

@@ -45,6 +45,13 @@ export interface MissionParticipant {
   leftAt: string | null;
 }
 
+export interface PeriodParticipant {
+  userId: string;
+  periodId: string;
+  checkedInAt: string;
+  checkedOutAt: string | null;
+}
+
 export interface Team {
   id: string;
   periodId: string;

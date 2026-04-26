@@ -13,6 +13,7 @@ export default function MissionLobby({ missionId, periodId }: Props) {
   const allTeams = useStore((s) => s.teams);
   const allTeamMembers = useStore((s) => s.teamMembers);
   const users = useStore((s) => s.users);
+  const allPeriods = useStore((s) => s.periods);
   const joinTeam = useStore((s) => s.joinTeam);
   const createTeam = useStore((s) => s.createTeam);
   const joinByLink = useStore((s) => s.joinByLink);
@@ -21,21 +22,23 @@ export default function MissionLobby({ missionId, periodId }: Props) {
   const [pasteLink, setPasteLink] = useState('');
   const [linkError, setLinkError] = useState(false);
 
-  const allPeriods = useStore((s) => s.periods);
   const mission = missions.find((m) => m.id === missionId);
   if (!mission) return null;
 
   // If periodId prop provided, show only that period's teams; else all mission periods
   const activePeriodId = periodId;
   const missionPeriodIds = allPeriods.filter((p) => p.missionId === missionId).map((p) => p.id);
-  const teams = allTeams.filter((te) =>
-    activePeriodId ? te.periodId === activePeriodId : missionPeriodIds.includes(te.periodId),
-  ).filter((te) => te.status !== 'dissolved');
+  const teams = allTeams
+    .filter((te) =>
+      activePeriodId ? te.periodId === activePeriodId : missionPeriodIds.includes(te.periodId),
+    )
+    .filter((te) => te.status !== 'dissolved');
 
   // Use the provided periodId or fall back to first unlocked period
   const effectivePeriod = activePeriodId
     ? allPeriods.find((p) => p.id === activePeriodId)
-    : (allPeriods.find((p) => p.missionId === missionId && !p.locked) ?? allPeriods.find((p) => p.missionId === missionId));
+    : (allPeriods.find((p) => p.missionId === missionId && !p.locked) ??
+       allPeriods.find((p) => p.missionId === missionId));
 
   const handleCreate = () => {
     if (!effectivePeriod) return;
@@ -60,6 +63,9 @@ export default function MissionLobby({ missionId, periodId }: Props) {
       <div className="bg-hgss-blue text-white p-3 rounded-lg mb-4">
         <p className="text-xs opacity-80">{t('mission.title')}</p>
         <p className="font-semibold">{mission.name}</p>
+        {effectivePeriod && (
+          <p className="text-xs opacity-80 mt-1">{t('period.checkedIn')}: {effectivePeriod.name}</p>
+        )}
       </div>
 
       <div className="text-center py-6">
@@ -70,9 +76,9 @@ export default function MissionLobby({ missionId, periodId }: Props) {
       <div className="space-y-2 mb-6">
         <p className="text-sm font-medium text-gray-700">{t('team.title')}</p>
         {teams.map((team) => {
-          const leaderMember = allTeamMembers.find((m) => m.teamId === team.id && m.role === 'leader');
+          const leaderMember = allTeamMembers.find((m) => m.teamId === team.id && m.role === 'leader' && m.active);
           const leader = leaderMember ? users.find((u) => u.id === leaderMember.userId) : undefined;
-          const memberCount = allTeamMembers.filter((m) => m.teamId === team.id).length;
+          const memberCount = allTeamMembers.filter((m) => m.teamId === team.id && m.active).length;
           return (
             <div key={team.id} className="border rounded-lg p-3 flex items-center justify-between">
               <div>

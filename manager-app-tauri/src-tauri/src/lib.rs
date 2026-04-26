@@ -77,6 +77,20 @@ pub fn run() {
             ",
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 2,
+            description: "add period_participants table",
+            sql: "
+                CREATE TABLE IF NOT EXISTS period_participants (
+                    user_id TEXT NOT NULL,
+                    period_id TEXT NOT NULL,
+                    checked_in_at TEXT NOT NULL,
+                    checked_out_at TEXT,
+                    PRIMARY KEY (user_id, period_id)
+                );
+            ",
+            kind: MigrationKind::Up,
+        },
     ];
 
     tauri::Builder::default()

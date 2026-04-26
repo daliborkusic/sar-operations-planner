@@ -1,7 +1,7 @@
 import Database from '@tauri-apps/plugin-sql';
-import type { Mission, OperationalPeriod, User, MissionParticipant, Team, TeamMember, Task } from './types';
+import type { Mission, OperationalPeriod, User, MissionParticipant, PeriodParticipant, Team, TeamMember, Task } from './types';
 import {
-  mockMissions, mockPeriods, mockUsers, mockMissionParticipants,
+  mockMissions, mockPeriods, mockUsers, mockMissionParticipants, mockPeriodParticipants,
   mockTeams, mockTeamMembers, mockTasks, mockControllers,
 } from './mock-data';
 
@@ -67,6 +67,12 @@ export async function seedIfEmpty() {
       [missionId, userId],
     );
   }
+  for (const pp of mockPeriodParticipants) {
+    await d.execute(
+      'INSERT INTO period_participants (user_id, period_id, checked_in_at, checked_out_at) VALUES ($1,$2,$3,$4)',
+      [pp.userId, pp.periodId, pp.checkedInAt, pp.checkedOutAt],
+    );
+  }
 }
 
 interface DbMission {
@@ -93,6 +99,9 @@ interface DbTask {
   id: string; period_id: string; label: string; search_type: string; task_type: string;
   priority: string; notes: string; status: string; assigned_team_id: string | null;
   started_at: string | null; completed_at: string | null;
+}
+interface DbPeriodParticipant {
+  user_id: string; period_id: string; checked_in_at: string; checked_out_at: string | null;
 }
 interface DbController { mission_id: string; user_id: string; }
 
@@ -137,11 +146,15 @@ export async function loadAll() {
     assignedTeamId: r.assigned_team_id,
     startedAt: r.started_at, completedAt: r.completed_at,
   }));
+  const periodParticipants = (await d.select<DbPeriodParticipant[]>('SELECT * FROM period_participants')).map((r) => ({
+    userId: r.user_id, periodId: r.period_id,
+    checkedInAt: r.checked_in_at, checkedOutAt: r.checked_out_at,
+  }));
   const controllerRows = await d.select<DbController[]>('SELECT * FROM controllers');
   const controllers: Record<string, string> = {};
   for (const r of controllerRows) controllers[r.mission_id] = r.user_id;
 
-  return { missions, periods, users, missionParticipants, teams, teamMembers, tasks, controllers };
+  return { missions, periods, users, missionParticipants, periodParticipants, teams, teamMembers, tasks, controllers };
 }
 
 export async function saveMissions(missions: Mission[]) {
@@ -184,6 +197,17 @@ export async function saveMissionParticipants(mps: MissionParticipant[]) {
     await d.execute(
       'INSERT INTO mission_participants (user_id, mission_id, role, joined_at, left_at) VALUES ($1,$2,$3,$4,$5)',
       [mp.userId, mp.missionId, mp.role, mp.joinedAt, mp.leftAt],
+    );
+  }
+}
+
+export async function savePeriodParticipants(pps: PeriodParticipant[]) {
+  const d = await getDb();
+  await d.execute('DELETE FROM period_participants');
+  for (const pp of pps) {
+    await d.execute(
+      'INSERT INTO period_participants (user_id, period_id, checked_in_at, checked_out_at) VALUES ($1,$2,$3,$4)',
+      [pp.userId, pp.periodId, pp.checkedInAt, pp.checkedOutAt],
     );
   }
 }

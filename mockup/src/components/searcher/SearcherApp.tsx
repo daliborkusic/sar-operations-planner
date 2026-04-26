@@ -13,21 +13,38 @@ function SearcherMissionView({ missionId }: { missionId: string }) {
   const allTeamMembers = useStore((s) => s.teamMembers);
   const allTeams = useStore((s) => s.teams);
   const missions = useStore((s) => s.missions);
-  const leaveMission = useStore((s) => s.leaveMission);
-  const setSelectedSearcherMission = useStore((s) => s.setSelectedSearcherMission);
-  const selectedSearcherPeriodId = useStore((s) => s.selectedSearcherPeriodId);
-  const setSelectedSearcherPeriod = useStore((s) => s.setSelectedSearcherPeriod);
-
   const allPeriods = useStore((s) => s.periods);
+  const periodParticipants = useStore((s) => s.periodParticipants);
+  const leaveMission = useStore((s) => s.leaveMission);
+  const checkInToPeriod = useStore((s) => s.checkInToPeriod);
+  const checkOutFromPeriod = useStore((s) => s.checkOutFromPeriod);
+  const setSelectedSearcherMission = useStore((s) => s.setSelectedSearcherMission);
+
   const mission = missions.find((m) => m.id === missionId);
   if (!mission) return null;
 
   const missionPeriodIds = allPeriods.filter((p) => p.missionId === missionId).map((p) => p.id);
   const unlockedPeriods = allPeriods.filter((p) => p.missionId === missionId && !p.locked);
-  const tm = currentUser ? allTeamMembers.find((m) => {
-    const team = allTeams.find((te) => te.id === m.teamId);
-    return m.userId === currentUser.id && m.active && team && missionPeriodIds.includes(team.periodId);
-  }) : undefined;
+
+  // Derive user's checked-in period from periodParticipants (most recent active check-in in this mission)
+  const checkedInPp = currentUser
+    ? periodParticipants
+        .filter(
+          (pp) =>
+            pp.userId === currentUser.id &&
+            pp.checkedOutAt === null &&
+            missionPeriodIds.includes(pp.periodId),
+        )
+        .sort((a, b) => b.checkedInAt.localeCompare(a.checkedInAt))[0]
+    : undefined;
+  const checkedInPeriodId = checkedInPp?.periodId ?? null;
+
+  const tm = currentUser
+    ? allTeamMembers.find((m) => {
+        const team = allTeams.find((te) => te.id === m.teamId);
+        return m.userId === currentUser.id && m.active && team && missionPeriodIds.includes(team.periodId);
+      })
+    : undefined;
   const team = tm ? allTeams.find((te) => te.id === tm.teamId) : undefined;
 
   if (mission.status === 'closed') {
@@ -46,7 +63,7 @@ function SearcherMissionView({ missionId }: { missionId: string }) {
     );
   }
 
-  // If user is already in a team, skip period selection and show team view or lobby
+  // If user is already in an active team, show team view
   if (team && team.status !== 'dissolved') {
     return (
       <div className="flex-1 flex flex-col">
@@ -54,75 +71,66 @@ function SearcherMissionView({ missionId }: { missionId: string }) {
           <button onClick={() => setSelectedSearcherMission(null)} className="text-hgss-blue text-xs">
             {'←'} {t('mission.backToList')}
           </button>
-          <button
-            onClick={() => { if (confirm(t('mission.leaveConfirm'))) leaveMission(missionId); }}
-            className="text-xs text-red-500"
-          >
-            {t('mission.leave')}
-          </button>
+          <div className="flex items-center gap-3">
+            {checkedInPeriodId && (
+              <button
+                onClick={() => { if (confirm(t('period.checkOut') + '?')) checkOutFromPeriod(checkedInPeriodId); }}
+                className="text-xs text-orange-600"
+              >
+                {t('period.checkOut')}
+              </button>
+            )}
+            <button
+              onClick={() => { if (confirm(t('mission.leaveConfirm'))) leaveMission(missionId); }}
+              className="text-xs text-red-500"
+            >
+              {t('mission.leave')}
+            </button>
+          </div>
         </div>
         <TeamView missionId={missionId} />
       </div>
     );
   }
 
-  // Period selection: if no period selected yet, show period picker (auto-select if only one)
-  const effectivePeriodId = selectedSearcherPeriodId && missionPeriodIds.includes(selectedSearcherPeriodId)
-    ? selectedSearcherPeriodId
-    : (unlockedPeriods.length === 1 ? unlockedPeriods[0].id : null);
-
-  if (!effectivePeriodId && unlockedPeriods.length !== 1) {
+  // If user is checked into a period, show lobby for that period
+  if (checkedInPeriodId) {
+    const checkedInPeriod = allPeriods.find((p) => p.id === checkedInPeriodId);
     return (
       <div className="flex-1 flex flex-col">
         <div className="bg-gray-50 px-4 py-2 flex items-center justify-between border-b">
           <button onClick={() => setSelectedSearcherMission(null)} className="text-hgss-blue text-xs">
             {'←'} {t('mission.backToList')}
           </button>
-          <button
-            onClick={() => { if (confirm(t('mission.leaveConfirm'))) leaveMission(missionId); }}
-            className="text-xs text-red-500"
-          >
-            {t('mission.leave')}
-          </button>
-        </div>
-        <div className="p-4">
-          <div className="bg-hgss-blue text-white p-3 rounded-lg mb-4">
-            <p className="text-xs opacity-80">{t('mission.title')}</p>
-            <p className="font-semibold">{mission.name}</p>
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-green-600 font-medium">
+              {t('period.checkedIn')}: {checkedInPeriod?.name}
+            </span>
+            <button
+              onClick={() => { if (confirm(t('period.checkOut') + '?')) checkOutFromPeriod(checkedInPeriodId); }}
+              className="text-xs text-orange-600"
+            >
+              {t('period.checkOut')}
+            </button>
+            <button
+              onClick={() => { if (confirm(t('mission.leaveConfirm'))) leaveMission(missionId); }}
+              className="text-xs text-red-500"
+            >
+              {t('mission.leave')}
+            </button>
           </div>
-          <p className="text-sm font-semibold text-gray-700 mb-3">{t('searcher.selectPeriod')}</p>
-          {unlockedPeriods.length === 0 ? (
-            <p className="text-gray-400 text-center py-6">{t('period.noperiods')}</p>
-          ) : (
-            <div className="space-y-2">
-              {unlockedPeriods.map((p) => (
-                <button
-                  key={p.id}
-                  onClick={() => setSelectedSearcherPeriod(p.id)}
-                  className="w-full text-left p-3 border rounded-lg hover:bg-blue-50 hover:border-hgss-blue transition-colors"
-                >
-                  <p className="font-medium text-sm">{p.name}</p>
-                </button>
-              ))}
-            </div>
-          )}
         </div>
+        <MissionLobby missionId={missionId} periodId={checkedInPeriodId} />
       </div>
     );
   }
 
+  // Show period check-in selection
   return (
     <div className="flex-1 flex flex-col">
       <div className="bg-gray-50 px-4 py-2 flex items-center justify-between border-b">
-        <button
-          onClick={() => {
-            setSelectedSearcherPeriod(null);
-            if (unlockedPeriods.length !== 1) return;
-            setSelectedSearcherMission(null);
-          }}
-          className="text-hgss-blue text-xs"
-        >
-          {'←'} {unlockedPeriods.length > 1 ? t('searcher.selectPeriod') : t('mission.backToList')}
+        <button onClick={() => setSelectedSearcherMission(null)} className="text-hgss-blue text-xs">
+          {'←'} {t('mission.backToList')}
         </button>
         <button
           onClick={() => { if (confirm(t('mission.leaveConfirm'))) leaveMission(missionId); }}
@@ -131,7 +139,33 @@ function SearcherMissionView({ missionId }: { missionId: string }) {
           {t('mission.leave')}
         </button>
       </div>
-      <MissionLobby missionId={missionId} periodId={effectivePeriodId ?? undefined} />
+      <div className="p-4">
+        <div className="bg-hgss-blue text-white p-3 rounded-lg mb-4">
+          <p className="text-xs opacity-80">{t('mission.title')}</p>
+          <p className="font-semibold">{mission.name}</p>
+        </div>
+        <p className="text-sm font-semibold text-gray-700 mb-3">{t('searcher.selectPeriod')}</p>
+        {unlockedPeriods.length === 0 ? (
+          <p className="text-gray-400 text-center py-6">{t('period.noperiods')}</p>
+        ) : (
+          <div className="space-y-2">
+            {unlockedPeriods.map((p) => (
+              <button
+                key={p.id}
+                onClick={() => checkInToPeriod(p.id)}
+                className="w-full text-left p-3 border rounded-lg hover:bg-blue-50 hover:border-hgss-blue transition-colors"
+              >
+                <div className="flex items-center justify-between">
+                  <p className="font-medium text-sm">{p.name}</p>
+                  <span className="text-xs px-2 py-0.5 bg-hgss-blue text-white rounded">
+                    {t('period.checkIn')}
+                  </span>
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -246,20 +280,8 @@ export default function SearcherApp() {
         </div>
       )}
 
-      {currentUser.type === 'registered' ? (
-        <>
-          <MissionList />
-          <PasteLinkField />
-        </>
-      ) : (
-        <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
-          <div className="text-4xl mb-4">📱</div>
-          <p className="text-gray-500">{t('searcher.scanToJoin')}</p>
-          <div className="w-full mt-6">
-            <PasteLinkField />
-          </div>
-        </div>
-      )}
+      <MissionList />
+      <PasteLinkField />
     </div>
   );
 }

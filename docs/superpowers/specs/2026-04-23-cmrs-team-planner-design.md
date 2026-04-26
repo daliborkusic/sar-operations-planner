@@ -55,6 +55,16 @@ A field tool for the Croatian Mountain Rescue Service (HGSS) that simplifies for
 - Joined at timestamp
 - Left at timestamp (nullable — null means still active)
 
+### PeriodParticipant (Check-in/Check-out)
+
+- User ID, Period ID
+- Checked in at: timestamp (when user checked into this period)
+- Checked out at: timestamp (nullable — null means still checked in)
+- Users check in/out of operational periods independently of mission membership
+- A user can be checked into multiple periods simultaneously
+- Managers can check users in/out
+- The period participant list shows who's currently checked in with timestamps
+
 ### Team
 
 - ID, Operational Period ID (links to mission through period)
@@ -98,6 +108,7 @@ A field tool for the Croatian Mountain Rescue Service (HGSS) that simplifies for
 ```
 Mission 1──* OperationalPeriod 1──* Team 1──* TeamMember *──1 User
 Mission 1──* OperationalPeriod 1──* Task *──1 Team (nullable)
+Mission 1──* OperationalPeriod 1──* PeriodParticipant *──1 User
 Mission 1──* MissionParticipant *──1 User
 ```
 
@@ -113,17 +124,20 @@ An operational period is a work cycle within a mission. It scopes teams and task
 - Kanban boards show teams and tasks for the selected period only
 
 **Searcher perspective:**
-- Registered searcher joins a mission, then selects an unlocked operational period
-- Searcher creates or joins teams within that period
-- If pre-assigned to a team by manager, searcher is auto-placed in the correct mission + period
-- Anonymous searcher joins via team QR code — automatically lands in the correct mission + period (no selection needed)
+- Registered searcher joins a mission, then checks in to an unlocked operational period (explicit check-in with timestamp)
+- Searcher can check out of a period (check-out timestamp recorded)
+- Searcher creates or joins teams within the period they're checked into
+- If pre-assigned to a team by manager, searcher is auto-checked-in to the correct period
+- Anonymous searcher joins via team QR code — automatically checked in to the correct period
 - Locked periods are not visible to searchers
+- Managers can check users in/out of periods
 
 **Data isolation:**
 - Teams belong to a specific period
 - Tasks belong to a specific period
 - A team from Period 1 cannot be assigned a task from Period 2
-- Participants (MissionParticipant) exist at the mission level, not the period level
+- MissionParticipant exists at the mission level (join/leave mission)
+- PeriodParticipant exists at the period level (check-in/check-out with timestamps)
 
 ## Operations Control Model
 
@@ -189,11 +203,13 @@ Two paths:
 - Scan QR / open link / paste link option also available
 - Missions the user has already joined do not appear in the join list
 
-### 4. Period Selection (after joining mission)
+### 4. Period Check-in (after joining mission)
 
 - List of unlocked operational periods in the mission
-- Tap to select a period → enters Mission Lobby for that period
-- If only one unlocked period exists, auto-select it
+- "Prijavi se" (Check in) button per period — creates PeriodParticipant with timestamp
+- Once checked in → enters Mission Lobby for that period
+- If only one unlocked period exists, auto-check-in
+- "Odjavi se" (Check out) button to leave a period — records check-out timestamp
 
 ### 5. Mission Lobby (in mission + period, no team yet)
 

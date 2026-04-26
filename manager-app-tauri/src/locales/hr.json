@@ -60,7 +60,16 @@
     "lock": "Zaključaj",
     "unlock": "Otključaj",
     "select": "Odaberite period",
-    "noperiods": "Nema operacijskih perioda"
+    "noperiods": "Nema operacijskih perioda",
+    "checkIn": "Prijavi se",
+    "checkOut": "Odjavi se",
+    "checkedIn": "Prijavljen",
+    "checkedOut": "Odjavljen",
+    "checkInUser": "Prijavi korisnika",
+    "checkOutUser": "Odjavi korisnika",
+    "checkedInAt": "Prijavljen u",
+    "checkedOutAt": "Odjavljen u",
+    "participants": "Sudionici perioda"
   },
   "team": {
     "title": "Timovi",

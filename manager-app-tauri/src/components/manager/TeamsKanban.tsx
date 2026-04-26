@@ -29,6 +29,7 @@ export default function TeamsKanban({ periodId }: Props) {
   const revokeTaskFromTeam = useStore((s) => s.revokeTaskFromTeam);
   const getTeamDisplayName = useStore((s) => s.getTeamDisplayName);
   const getTeamMembers = useStore((s) => s.getTeamMembers);
+  const getTeamHistory = useStore((s) => s.getTeamHistory);
   const createTeamAsManager = useStore((s) => s.createTeamAsManager);
   const renameTeam = useStore((s) => s.renameTeam);
   const teamFilter = useStore((s) => s.teamFilter);
@@ -42,7 +43,8 @@ export default function TeamsKanban({ periodId }: Props) {
   const teams = teamFilterLower
     ? allPeriodTeams.filter((te) => {
         if ((te.name || '').toLowerCase().includes(teamFilterLower)) return true;
-        const members = getTeamMembers(te.id);
+        // For dissolved teams, search through full history
+        const members = te.status === 'dissolved' ? getTeamHistory(te.id) : getTeamMembers(te.id);
         return members.some((m) => m.name.toLowerCase().includes(teamFilterLower));
       })
     : allPeriodTeams;
@@ -124,7 +126,10 @@ export default function TeamsKanban({ periodId }: Props) {
             return (
               <KanbanColumn key={col.status} id={col.status} title={statusLabels[col.status]} count={colTeams.length} color={col.color}>
                 {colTeams.map((team) => {
-                  const members = getTeamMembers(team.id);
+                  // For dissolved teams, show all historical members; for active teams, show only active
+                  const members = team.status === 'dissolved'
+                    ? getTeamHistory(team.id)
+                    : getTeamMembers(team.id);
                   const teamTasks = allTasks.filter((tk) => tk.assignedTeamId === team.id && tk.status === 'inProgress');
                   return (
                     <KanbanCard key={team.id} id={team.id} disabled={!isController || team.status === 'dissolved'}>
