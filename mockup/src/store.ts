@@ -65,8 +65,6 @@ interface AppState {
   loginManagerAs: (userId: string) => void;
   logout: () => void;
 
-  checkInToPeriod: (periodId: string) => void;
-  checkOutFromPeriod: (periodId: string) => void;
   checkInUserToPeriod: (userId: string, periodId: string) => void;
   checkOutUserFromPeriod: (userId: string, periodId: string) => void;
 
@@ -148,44 +146,6 @@ export const useStore = create<AppState>((set, get) => ({
   setPendingAssignment: (pa) => set({ pendingAssignment: pa }),
   setTaskFilter: (filter) => set((s) => ({ taskFilter: { ...s.taskFilter, ...filter } })),
   setTeamFilter: (filter) => set((s) => ({ teamFilter: { ...s.teamFilter, ...filter } })),
-
-  checkInToPeriod: (periodId) => {
-    const { currentUser, periodParticipants } = get();
-    if (!currentUser) return;
-    const already = periodParticipants.find(
-      (pp) => pp.userId === currentUser.id && pp.periodId === periodId && pp.checkedOutAt === null,
-    );
-    if (already) return;
-    // Also ensure user is joined to the mission
-    const period = get().periods.find((p) => p.id === periodId);
-    if (period) {
-      const alreadyInMission = get().missionParticipants.find(
-        (mp) => mp.userId === currentUser.id && mp.missionId === period.missionId && mp.leftAt === null,
-      );
-      if (!alreadyInMission) {
-        get().joinMission(period.missionId);
-      }
-    }
-    set((s) => ({
-      periodParticipants: [
-        ...s.periodParticipants,
-        { userId: currentUser.id, periodId, checkedInAt: new Date().toISOString(), checkedOutAt: null },
-      ],
-    }));
-  },
-
-  checkOutFromPeriod: (periodId) => {
-    const { currentUser } = get();
-    if (!currentUser) return;
-    const now = new Date().toISOString();
-    set((s) => ({
-      periodParticipants: s.periodParticipants.map((pp) =>
-        pp.userId === currentUser.id && pp.periodId === periodId && pp.checkedOutAt === null
-          ? { ...pp, checkedOutAt: now }
-          : pp,
-      ),
-    }));
-  },
 
   checkInUserToPeriod: (userId, periodId) => {
     const { periodParticipants } = get();
@@ -387,6 +347,18 @@ export const useStore = create<AppState>((set, get) => ({
         if (!alreadyInMission) {
           get().joinMission(period.missionId);
         }
+        // Auto check-in to the period if not already checked in
+        const alreadyCheckedIn = get().periodParticipants.find(
+          (pp) => pp.userId === currentUser.id && pp.periodId === team.periodId && pp.checkedOutAt === null,
+        );
+        if (!alreadyCheckedIn) {
+          set((s) => ({
+            periodParticipants: [
+              ...s.periodParticipants,
+              { userId: currentUser.id, periodId: team.periodId, checkedInAt: new Date().toISOString(), checkedOutAt: null },
+            ],
+          }));
+        }
       }
     }
     // Check if previously a member of this team (inactive)
@@ -475,12 +447,30 @@ export const useStore = create<AppState>((set, get) => ({
     const filtered = get().teamMembers.map((tm) =>
       tm.userId === currentUser.id && tm.active ? { ...tm, active: false } : tm,
     );
+    // Auto check-in to the period if not already checked in
+    const alreadyCheckedIn = get().periodParticipants.find(
+      (pp) => pp.userId === currentUser.id && pp.periodId === periodId && pp.checkedOutAt === null,
+    );
+    const newPeriodParticipants = alreadyCheckedIn
+      ? []
+      : [{ userId: currentUser.id, periodId, checkedInAt: new Date().toISOString(), checkedOutAt: null }];
+    // Ensure user is in the mission
+    const period = get().periods.find((p) => p.id === periodId);
+    if (period) {
+      const alreadyInMission = get().missionParticipants.find(
+        (mp) => mp.userId === currentUser.id && mp.missionId === period.missionId && mp.leftAt === null,
+      );
+      if (!alreadyInMission) {
+        get().joinMission(period.missionId);
+      }
+    }
     set((s) => ({
       teams: [...s.teams, team],
       teamMembers: [
         ...filtered,
         { teamId, userId: currentUser.id, role: 'leader', active: true, joinedAt: new Date().toISOString() },
       ],
+      periodParticipants: [...s.periodParticipants, ...newPeriodParticipants],
     }));
   },
 
@@ -944,8 +934,12 @@ export const useStore = create<AppState>((set, get) => ({
   },
 
   lockPeriod: (periodId) => {
+    const now = new Date().toISOString();
     set((s) => ({
       periods: s.periods.map((p) => (p.id === periodId ? { ...p, locked: true } : p)),
+      periodParticipants: s.periodParticipants.map((pp) =>
+        pp.periodId === periodId && pp.checkedOutAt === null ? { ...pp, checkedOutAt: now } : pp,
+      ),
     }));
   },
 
@@ -976,11 +970,6 @@ export const useStore = create<AppState>((set, get) => ({
       const team = get().teams.find((t) => t.joinCode === joinCode);
       if (!team) return null;
       get().joinTeam(team.id);
-      // Also check in to the period
-      const { currentUser } = get();
-      if (currentUser) {
-        get().checkInToPeriod(team.periodId);
-      }
       return 'team';
     }
     return null;

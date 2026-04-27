@@ -124,13 +124,13 @@ An operational period is a work cycle within a mission. It scopes teams and task
 - Kanban boards show teams and tasks for the selected period only
 
 **Searcher perspective:**
-- Registered searcher joins a mission, then checks in to an unlocked operational period (explicit check-in with timestamp)
-- Searcher can check out of a period (check-out timestamp recorded)
-- Searcher creates or joins teams within the period they're checked into
+- Searchers join/leave missions only — no manual period check-in/out
+- After joining a mission, searchers see teams from all unlocked periods (grouped by period if multiple)
+- Check-in happens automatically when a searcher joins or creates a team (PeriodParticipant created)
+- Check-out happens when: manager clicks "check out" for the user, or the period is locked
 - If pre-assigned to a team by manager, searcher is auto-checked-in to the correct period
 - Anonymous searcher joins via team QR code — automatically checked in to the correct period
-- Locked periods are not visible to searchers
-- Managers can check users in/out of periods
+- Locked periods and their teams are not visible to searchers
 
 **Data isolation:**
 - Teams belong to a specific period
@@ -203,24 +203,16 @@ Two paths:
 - Scan QR / open link / paste link option also available
 - Missions the user has already joined do not appear in the join list
 
-### 4. Period Check-in (after joining mission)
+### 4. Mission Lobby (in mission, no team yet)
 
-- List of unlocked operational periods in the mission
-- "Prijavi se" (Check in) button per period — creates PeriodParticipant with timestamp
-- Once checked in → enters Mission Lobby for that period
-- If only one unlocked period exists, auto-check-in
-- "Odjavi se" (Check out) button to leave a period — records check-out timestamp
-
-### 5. Mission Lobby (in mission + period, no team yet)
-
-- Shows current operational period name
+- Shows teams from all unlocked operational periods, grouped by period name if multiple exist
 - "Waiting for team assignment" message
-- Scan team QR / open team link / paste team link to join a team
-- "Create a team" button → user becomes team leader, can display QR, share link, and copy link
-- Compact header bar: back arrow, mission name + period name (truncated), overflow menu (⋮) with check-out and leave mission
-- "Leave mission" and "Check out" in the overflow menu to keep header clean
+- Scan team QR / open team link / paste team link to join a team (team links only inside a mission)
+- "Create a team" button → if multiple unlocked periods, picker shown; user becomes team leader
+- Compact header bar: back arrow, mission name (truncated), overflow menu (⋮) with "Leave mission"
+- Joining or creating a team automatically checks the user into that period (PeriodParticipant created)
 
-### 6. Team View (main screen)
+### 5. Team View (main screen)
 
 Layout order (top to bottom):
 1. Team name (or leader's name if unnamed) + status badge
@@ -232,7 +224,7 @@ Layout order (top to bottom):
 7. Current task(s) — list of assigned tasks with details (label, search type, task type, priority, notes). Each task has "Zadatak izvršen" button for the leader. Or "No task assigned" if none.
 - All updates in real-time via SignalR
 
-### 7. Team Leader Actions (in searcher app)
+### 6. Team Leader Actions (in searcher app)
 
 - Create team and generate QR/link
 - Display/share team QR, link, and copy link to clipboard
@@ -241,12 +233,12 @@ Layout order (top to bottom):
 - Dissolve own team (with confirmation)
 - Leave team (leadership transfers)
 
-### 8. Mission Ended
+### 7. Mission Ended
 
 - Summary screen when manager closes mission
 - "Back to mission list" button to navigate away
 
-### 9. Leave Mission
+### 8. Leave Mission
 
 - Searcher can leave a mission at any time
 - Leaving removes them from active teams (leadership transfers, empty teams dissolve)

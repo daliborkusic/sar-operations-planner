@@ -681,10 +681,14 @@ export const useStore = create<AppState>((set, get) => ({
   },
 
   lockPeriod: (periodId) => {
+    const now = new Date().toISOString();
     set((s) => ({
       periods: s.periods.map((p) => (p.id === periodId ? { ...p, locked: true } : p)),
+      periodParticipants: s.periodParticipants.map((pp) =>
+        pp.periodId === periodId && !pp.checkedOutAt ? { ...pp, checkedOutAt: now } : pp,
+      ),
     }));
-    persist(['periods']);
+    persist(['periods', 'periodParticipants']);
   },
 
   unlockPeriod: (periodId) => {
