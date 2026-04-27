@@ -166,6 +166,58 @@ One manager holds "operations control" of a mission at a time. Protocol-based, n
 | Any (except Dissolved) → Dissolved | Drag on kanban (confirmation dialog) | Dissolve button in app |
 | Dissolved → Any | **Not allowed** — dissolved is permanent | — |
 
+### Task State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Draft : Created
+
+    Draft --> Unassigned : Manager promotes
+    Unassigned --> Draft : Manager demotes
+
+    Unassigned --> InProgress : Manager assigns team\n(sets startedAt)
+    InProgress --> Unassigned : Manager revokes / drags back\n(releases team)
+    InProgress --> Draft : Manager drags back\n(releases team)
+
+    InProgress --> Completed : Manager or team leader\ncompletes (sets completedAt)
+
+    state Draft {
+        direction LR
+    }
+
+    note right of Draft : "U pripremi"
+    note right of Unassigned : "Nedodijeljeno"
+    note right of InProgress : "U tijeku"
+    note right of Completed : "Završeno"
+```
+
+### Team State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Idle : Created
+
+    Idle --> Resting : Manager drag / leader toggle
+    Resting --> Idle : Manager drag / leader toggle
+
+    Idle --> InTask : Task assigned\n(via popup)
+    InTask --> Resting : Manager drag / leader toggle\n(tasks stay InProgress)
+    Resting --> InTask : Resume (has tasks)\nor new assignment
+
+    InTask --> Idle : All tasks completed/revoked\nor manager forces idle\n(revokes all tasks)
+
+    Idle --> Dissolved : Manager drag\n(confirmation)
+    Resting --> Dissolved : Manager drag\n(confirmation)
+    InTask --> Dissolved : Manager drag\n(confirmation, revokes tasks)
+
+    Dissolved --> [*]
+
+    note right of Idle : "Spreman"
+    note right of Resting : "Odmor"
+    note right of InTask : "U zadatku"
+    note left of Dissolved : "Raspušten"\n(permanent, no exit)
+```
+
 ### Multi-Task Team Behavior
 
 A team can have multiple tasks assigned simultaneously. The team status follows these rules:
