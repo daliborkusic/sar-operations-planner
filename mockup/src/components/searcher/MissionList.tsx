@@ -9,7 +9,7 @@ export default function MissionList() {
   const missionParticipants = useStore((s) => s.missionParticipants);
   const joinMission = useStore((s) => s.joinMission);
   const userMissionIds = currentUser
-    ? missionParticipants.filter((mp) => mp.userId === currentUser.id).map((mp) => mp.missionId)
+    ? missionParticipants.filter((mp) => mp.userId === currentUser.id && !mp.leftAt).map((mp) => mp.missionId)
     : [];
   const missions = allMissions.filter((m) => m.status === 'active' && !userMissionIds.includes(m.id));
 

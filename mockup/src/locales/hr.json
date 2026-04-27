@@ -152,6 +152,8 @@
     "pasteLink": "Zalijepite poveznicu",
     "pasteLinkPlaceholder": "cmrs://mission/... ili cmrs://team/...",
     "invalidLink": "Neispravna poveznica",
+    "joinByLink": "Pridruži se",
+    "teamLinkOnly": "Ovdje možete zalijepiti samo poveznicu tima",
     "selectPeriod": "Odaberite operacijski period"
   },
   "dashboard": {

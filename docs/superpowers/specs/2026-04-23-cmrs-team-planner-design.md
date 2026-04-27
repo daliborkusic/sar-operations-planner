@@ -217,8 +217,8 @@ Two paths:
 - "Waiting for team assignment" message
 - Scan team QR / open team link / paste team link to join a team
 - "Create a team" button → user becomes team leader, can display QR, share link, and copy link
-- "Leave mission" option available
-- "Back to mission list" navigation
+- Compact header bar: back arrow, mission name + period name (truncated), overflow menu (⋮) with check-out and leave mission
+- "Leave mission" and "Check out" in the overflow menu to keep header clean
 
 ### 6. Team View (main screen)
 
@@ -261,6 +261,9 @@ Layout order (top to bottom):
 - Deep link scheme: `cmrs://mission/{code}` and `cmrs://team/{code}`
 - Links displayed with copy button alongside QR codes (both manager and searcher)
 - Searcher app supports pasting links to join missions/teams (input field for manual entry)
+- On the mission list screen: paste field accepts both mission and team links (label: "Pridruži se")
+- Inside a mission (lobby): paste field accepts team links only — mission links are rejected with message
+- Missions a user has left (leftAt set) reappear in the joinable mission list
 
 ## Manager App Flow
 
